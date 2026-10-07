@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analyzer — Analyseur de logs</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="maquette.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════════ NAVBAR ══════════════ -->
+  <nav>
+    <div class="logo" onclick="goHome()">Analy<span>zer</span></div>
+
+    <div class="nav-menu">
+      <!-- Accueil -->
+      <button class="nav-link active" id="nav-home" onclick="goHome()">
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Accueil
+      </button>
+
+      <div class="nav-sep"></div>
+
+      <!-- Visualiser -->
+      <button class="nav-link" id="nav-visualize" onclick="navMenuTo('visualize')" disabled>
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        Visualiser
+      </button>
+
+      <!-- Analyser -->
+      <button class="nav-link" id="nav-analyze" onclick="navMenuTo('analyze')" disabled>
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6"  y1="20" x2="6"  y2="14"/>
+        </svg>
+        Analyser
+      </button>
+    </div>
+  </nav>
+
+  <!-- ══════════════ PAGE HOME ══════════════ -->
+  <div id="page-home" class="page active">
+    <div class="home-inner">
+      <div class="page-title">
+        <h1>Analyseur de logs</h1>
+        <p>Charger un fichier, choisissez son format, puis visualisez et analysez.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
+          <div>
+            <h2>Import de fichiers de logs</h2>
+            <p>Analysez vos fichiers journaux</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- Format -->
+          <div>
+            <label class="field-label" for="log-format">
+              Format des logs <span class="req">*</span>
+            </label>
+            <select id="log-format" onchange="updateNavBtns()">
+              <option value="">Sélectionner le format des logs...</option>
+              <option value="application">Logs applicatifs</option>
+              <option value="system">Logs système</option>
+              <option value="security">Logs de sécurité</option>
+              <option value="access">Logs d'accès (HTTP)</option>
+              <option value="error">Logs d'erreurs</option>
+              <option value="debug">Logs de débogage</option>
+              <option value="audit">Logs d'audit</option>
+              <option value="network">Logs réseau</option>
+              <option value="database">Logs base de données</option>
+              <option value="other">Autre</option>
+            </select>
+          </div>
+
+          <!-- Drop zone -->
+          <div>
+            <label class="field-label">Fichier(s) de logs</label>
+            <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+              <input type="file" id="file-input" multiple accept=".log,.txt,.csv,.json,.gz,.zip" onchange="handleFiles(this.files)" />
+              <div class="upload-circle">
+                <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="16 16 12 12 8 16"/>
+                  <line x1="12" y1="12" x2="12" y2="21"/>
+                  <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                </svg>
+              </div>
+              <p class="drop-main" id="drop-main-text">Glissez-déposez vos fichiers ici</p>
+              <p class="drop-sub">ou <a href="#" onclick="event.stopPropagation();document.getElementById('file-input').click();return false;">parcourez vos fichiers</a></p>
+              <p class="drop-formats">Formats supportés : .log, .txt, .csv, .json, .gz, .zip</p>
+            </div>
+          </div>
+
+          <!-- File list -->
+          <div id="file-list-section" style="display:none;">
+            <p class="file-list-title" id="file-list-title">Fichiers sélectionnés (0)</p>
+            <div class="file-list" id="file-list"></div>
+          </div>
+
+          <!-- Import buttons -->
+          <div class="btn-row">
+            <button class="btn btn-outline" id="btn-clear" onclick="clearFiles()" disabled>Effacer tout</button>
+            <button class="btn btn-primary" id="btn-import" onclick="importFiles()" disabled>
+              <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 16 12 12 8 16"/>
+                <line x1="12" y1="12" x2="12" y2="21"/>
+                <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+              </svg>
+              Importer les logs
+            </button>
+          </div>
+          <p class="warn" id="warn-format" style="display:none;">⚠️ Veuillez sélectionner le format des logs avant d'importer</p>
+
+          <!-- Divider -->
+          <div class="divider">
+            <div class="divider-line"></div>
+            <span class="divider-label">Accès aux outils</span>
+            <div class="divider-line"></div>
+          </div>
+
+          <!-- Nav buttons -->
+          <div class="nav-btns">
+            <button class="nav-btn" id="btn-visualize" onclick="navigateTo('visualize')" disabled>
+              <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <div>
+                <div class="nav-btn-title">Visualiser les logs</div>
+                <div class="nav-btn-sub">Parcourir les entrées du fichier</div>
+              </div>
+            </button>
+            <button class="nav-btn" id="btn-analyze" onclick="navigateTo('analyze')" disabled>
+              <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6"  y1="20" x2="6"  y2="14"/>
+              </svg>
+              <div>
+                <div class="nav-btn-title">Analyser les logs</div>
+                <div class="nav-btn-sub">Statistiques et graphiques</div>
+              </div>
+            </button>
+          </div>
+          <p class="hint" id="hint-nav">Importez un fichier et sélectionnez un format pour accéder aux outils</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ PAGE LOADING ══════════════ -->
+  <div id="page-loading" class="page">
+    <div class="loading-inner fade-up">
+      <div class="spinner-wrap">
+        <svg viewBox="0 0 90 90">
+          <circle class="spinner-bg" cx="45" cy="45" r="38"/>
+          <circle class="spinner-fg" id="spinner-circle" cx="45" cy="45" r="38"/>
+        </svg>
+        <div class="spinner-pct" id="spinner-pct">0%</div>
+      </div>
+      <div style="text-align:center">
+        <div class="loading-title" id="loading-title">Préparation...</div>
+        <div class="loading-step"  id="loading-step">Lecture du fichier...</div>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fg" id="progress-bar"></div>
+      </div>
+      <div class="step-dots" id="step-dots"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════ PAGE VISUALIZE ══════════════ -->
+  <div id="page-visualize" class="page">
+    <div class="visu-inner fade-up">
+      <div class="page-header">
+        <div>
+          <h2>Visualisation des logs</h2>
+          <p id="visu-count">15 entrées affichées</p>
+        </div>
+        <button class="btn-back" onclick="goHome()">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Retour
+        </button>
+      </div>
+
+      <div class="filters">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input class="search-input" type="text" placeholder="Rechercher dans les logs..." id="search-input" oninput="renderTable()" />
+        </div>
+        <select class="filter-select" id="level-filter" onchange="renderTable()">
+          <option value="ALL">Tous les niveaux</option>
+          <option value="INFO">INFO</option>
+          <option value="WARN">WARN</option>
+          <option value="ERROR">ERROR</option>
+          <option value="DEBUG">DEBUG</option>
+        </select>
+      </div>
+
+      <div class="level-badges" id="level-badges"></div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Horodatage</th>
+              <th>Niveau</th>
+              <th>Source</th>
+              <th>Message</th>
+            </tr>
+          </thead>
+          <tbody id="log-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ PAGE ANALYZE ══════════════ -->
+  <div id="page-analyze" class="page">
+    <div class="analyze-inner fade-up">
+      <div class="page-header">
+        <div>
+          <h2>Analyse des logs</h2>
+          <p>Rapport généré le 07/10/2026 à 08:30</p>
+        </div>
+        <button class="btn-back" onclick="goHome()">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Retour
+        </button>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-label">Total entrées</span>
+            <span class="kpi-icon" style="color:#3b82f6">
+              <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            </span>
+          </div>
+          <div class="kpi-value" style="color:#3b82f6">16</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-label">Erreurs</span>
+            <span class="kpi-icon" style="color:#f87171">
+              <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </span>
+          </div>
+          <div class="kpi-value" style="color:#f87171">4</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-label">Taux de succès</span>
+            <span class="kpi-icon" style="color:#34d399">
+              <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </span>
+          </div>
+          <div class="kpi-value" style="color:#34d399">75%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-label">Plage temporelle</span>
+            <span class="kpi-icon" style="color:#a78bfa">
+              <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </span>
+          </div>
+          <div class="kpi-value" style="color:#a78bfa">26 min</div>
+        </div>
+      </div>
+
+      <!-- Charts row 1 -->
+      <div class="charts-row">
+        <div class="chart-card">
+          <h3>Distribution par niveau</h3>
+          <div class="chart-container">
+            <canvas id="chart-bar"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>Répartition par source</h3>
+          <div class="chart-container">
+            <canvas id="chart-doughnut"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart row 2 -->
+      <div class="chart-card chart-full">
+        <h3>Évolution temporelle des événements</h3>
+        <div class="chart-container">
+          <canvas id="chart-line"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   DATA
+═══════════════════════════════════════ */
+const LOGS = [
+  { id:1,  ts:"2026-10-07 08:01:12", level:"INFO",  src:"auth-service",    msg:"Connexion réussie pour l'utilisateur admin@company.com" },
+  { id:2,  ts:"2026-10-07 08:02:45", level:"WARN",  src:"api-gateway",     msg:"Temps de réponse élevé détecté : 1 842 ms" },
+  { id:3,  ts:"2026-10-07 08:03:01", level:"ERROR", src:"db-connector",    msg:"Échec de connexion à la base de données primaire, tentative de basculement..." },
+  { id:4,  ts:"2026-10-07 08:03:05", level:"INFO",  src:"db-connector",    msg:"Basculement vers la base de données secondaire réussi" },
+  { id:5,  ts:"2026-10-07 08:05:33", level:"DEBUG", src:"scheduler",       msg:"Tâche planifiée 'sync-users' démarrée (ID: job-4821)" },
+  { id:6,  ts:"2026-10-07 08:07:14", level:"ERROR", src:"mail-service",    msg:"Impossible d'envoyer l'e-mail : SMTP timeout après 30 s" },
+  { id:7,  ts:"2026-10-07 08:09:22", level:"INFO",  src:"auth-service",    msg:"Token JWT renouvelé pour l'utilisateur user42" },
+  { id:8,  ts:"2026-10-07 08:11:50", level:"WARN",  src:"cache-manager",   msg:"Cache hit rate inférieur à 60 % — vérifiez la configuration TTL" },
+  { id:9,  ts:"2026-10-07 08:13:09", level:"INFO",  src:"api-gateway",     msg:"Déploiement v2.4.1 appliqué avec succès" },
+  { id:10, ts:"2026-10-07 08:15:42", level:"DEBUG", src:"scheduler",       msg:"Tâche 'sync-users' terminée en 2 312 ms — 148 enregistrements traités" },
+  { id:11, ts:"2026-10-07 08:17:03", level:"ERROR", src:"payment-service", msg:"Transaction #TX-9921 refusée : code d'erreur 4003 (fonds insuffisants)" },
+  { id:12, ts:"2026-10-07 08:19:28", level:"INFO",  src:"auth-service",    msg:"Déconnexion de l'utilisateur user99@company.com" },
+  { id:13, ts:"2026-10-07 08:21:11", level:"WARN",  src:"api-gateway",     msg:"Rate limit atteint pour l'IP 192.168.1.45 (200 req/min)" },
+  { id:14, ts:"2026-10-07 08:23:55", level:"INFO",  src:"db-connector",    msg:"Sauvegarde automatique effectuée — 3.2 GB exportés" },
+  { id:15, ts:"2026-10-07 08:26:18", level:"ERROR", src:"cache-manager",   msg:"Éviction forcée de 2 048 entrées — mémoire critique à 94 %" },
+];
+
+const LEVEL_CFG = {
+  INFO:  { color:"#60a5fa", bg:"rgba(59,130,246,.15)",  icon:'<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>' },
+  WARN:  { color:"#fbbf24", bg:"rgba(251,191,36,.15)",  icon:'<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' },
+  ERROR: { color:"#f87171", bg:"rgba(248,113,113,.15)", icon:'<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>' },
+  DEBUG: { color:"#a78bfa", bg:"rgba(167,139,250,.15)", icon:'<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' },
+};
+
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+let uploadedFiles = [];
+let loadingTarget = 'visualize';
+let loadingTimer  = null;
+let chartsInit    = false;
+
+/* ═══════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════ */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  updateNavMenu(id);
+}
+
+function updateNavMenu(activeId) {
+  // Reset all
+  ['nav-home','nav-visualize','nav-analyze'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('active','active-purple');
+  });
+  if (activeId === 'home')      document.getElementById('nav-home').classList.add('active');
+  if (activeId === 'visualize') document.getElementById('nav-visualize').classList.add('active');
+  if (activeId === 'analyze')   document.getElementById('nav-analyze').classList.add('active-purple');
+}
+
+function updateNavMenuAccess() {
+  const fmt      = document.getElementById('log-format').value;
+  const hasFiles = uploadedFiles.length > 0;
+  const canNav   = fmt && hasFiles;
+  document.getElementById('nav-visualize').disabled = !canNav;
+  document.getElementById('nav-analyze').disabled   = !canNav;
+}
+
+function goHome() {
+  if (loadingTimer) { clearInterval(loadingTimer); loadingTimer = null; }
+  showPage('home');
+}
+
+function navigateTo(target) {
+  loadingTarget = target;
+  showPage('loading');
+  startLoading();
+}
+
+/* Direct nav from menu — skip loading if already visited, else go through loading */
+function navMenuTo(target) {
+  loadingTarget = target;
+  showPage('loading');
+  startLoading();
+}
+
+/* ═══════════════════════════════════════
+   LOADING
+═══════════════════════════════════════ */
+function startLoading() {
+  const steps = loadingTarget === 'visualize'
+    ? ["Lecture du fichier...", "Parsing des entrées...", "Formatage des données...", "Prêt à visualiser !"]
+    : ["Lecture du fichier...", "Extraction des patterns...", "Calcul des statistiques...", "Analyse terminée !"];
+
+  const title = loadingTarget === 'visualize' ? "Préparation de la visualisation" : "Analyse en cours";
+  document.getElementById('loading-title').textContent = title;
+
+  // Build step dots
+  const dotsEl = document.getElementById('step-dots');
+  dotsEl.innerHTML = '';
+  steps.forEach((_, i) => {
+    if (i > 0) {
+      const line = document.createElement('div');
+      line.className = 'step-line';
+      line.id = 'step-line-' + i;
+      dotsEl.appendChild(line);
+    }
+    const dot = document.createElement('div');
+    dot.className = 'step-dot';
+    dot.id = 'step-dot-' + i;
+    dotsEl.appendChild(dot);
+  });
+
+  const durations = [600, 700, 700, 500];
+  const total = durations.reduce((a,b) => a+b, 0);
+  let elapsed = 0;
+  const circumference = 2 * Math.PI * 38; // r=38
+
+  document.getElementById('spinner-circle').style.strokeDasharray  = circumference;
+  document.getElementById('spinner-circle').style.strokeDashoffset = circumference;
+
+  loadingTimer = setInterval(() => {
+    elapsed += 30;
+    const pct = Math.min(elapsed / total, 1);
+
+    // progress
+    document.getElementById('progress-bar').style.width = (pct * 100) + '%';
+    document.getElementById('spinner-pct').textContent  = Math.round(pct * 100) + '%';
+    document.getElementById('spinner-circle').style.strokeDashoffset = circumference * (1 - pct);
+
+    // step
+    let cumul = 0, step = 0;
+    for (let i = 0; i < durations.length; i++) {
+      cumul += durations[i];
+      if (elapsed < cumul) { step = i; break; }
+      step = i;
+    }
+    document.getElementById('loading-step').textContent = steps[step];
+    steps.forEach((_, i) => {
+      const dot  = document.getElementById('step-dot-' + i);
+      const line = document.getElementById('step-line-' + i);
+      if (i < step)  { dot.className = 'step-dot done'; if (line) line.className = 'step-line done'; }
+      if (i === step){ dot.className = 'step-dot active'; }
+      if (i > step)  { dot.className = 'step-dot'; }
+    });
+
+    if (elapsed >= total) {
+      clearInterval(loadingTimer); loadingTimer = null;
+      setTimeout(() => {
+        showPage(loadingTarget);
+        if (loadingTarget === 'analyze') { if (!chartsInit) { initCharts(); chartsInit = true; } }
+        if (loadingTarget === 'visualize') { renderTable(); renderBadges(); }
+      }, 300);
+    }
+  }, 30);
+}
+
+/* ═══════════════════════════════════════
+   FILE HANDLING
+═══════════════════════════════════════ */
+function handleFiles(files) {
+  Array.from(files).forEach(f => {
+    uploadedFiles.push({ id: Date.now() + Math.random(), file: f, status: 'ready' });
+  });
+  renderFileList();
+  updateButtons();
+  updateNavBtns();
+}
+
+function renderFileList() {
+  const section = document.getElementById('file-list-section');
+  const list    = document.getElementById('file-list');
+  const title   = document.getElementById('file-list-title');
+
+  if (uploadedFiles.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  title.textContent = `Fichiers sélectionnés (${uploadedFiles.length})`;
+
+  list.innerHTML = uploadedFiles.map(uf => {
+    const size = formatSize(uf.file.size);
+    const fmt  = document.getElementById('log-format');
+    const fmtLabel = fmt.options[fmt.selectedIndex]?.text || '';
+    const statusIcon = uf.status === 'success'
+      ? `<div class="file-icon green"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>`
+      : `<div class="file-icon blue"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>`;
+    const okBadge = uf.status === 'success' ? `<span class="dot">•</span><span class="ok">Importé</span>` : '';
+    return `
+      <div class="file-item">
+        ${statusIcon}
+        <div class="file-info">
+          <div class="file-name">${uf.file.name}</div>
+          <div class="file-meta">
+            <span class="size">${size}</span>
+            ${fmtLabel && fmtLabel !== 'Sélectionner le format des logs...' ? `<span class="dot">•</span><span class="type">${fmtLabel}</span>` : ''}
+            ${okBadge}
+          </div>
+        </div>
+        <button class="file-remove" onclick="removeFile('${uf.id}')">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>`;
+  }).join('');
+}
+
+function removeFile(id) {
+  uploadedFiles = uploadedFiles.filter(f => String(f.id) !== String(id));
+  renderFileList();
+  updateButtons();
+  updateNavBtns();
+}
+
+function clearFiles() {
+  uploadedFiles = [];
+  document.getElementById('file-input').value = '';
+  renderFileList();
+  updateButtons();
+  updateNavBtns();
+}
+
+function importFiles() {
+  const fmt = document.getElementById('log-format').value;
+  if (!fmt) { document.getElementById('warn-format').style.display = 'block'; return; }
+  document.getElementById('warn-format').style.display = 'none';
+  uploadedFiles = uploadedFiles.map(f => ({ ...f, status: 'success' }));
+  renderFileList();
+  updateNavBtns();
+}
+
+function updateButtons() {
+  const hasFiles = uploadedFiles.length > 0;
+  document.getElementById('btn-clear').disabled  = !hasFiles;
+  document.getElementById('btn-import').disabled = !hasFiles;
+}
+
+function updateNavBtns() {
+  const fmt      = document.getElementById('log-format').value;
+  const hasFiles = uploadedFiles.length > 0;
+  const canNav   = fmt && hasFiles;
+
+  const vBtn = document.getElementById('btn-visualize');
+  const aBtn = document.getElementById('btn-analyze');
+  const hint = document.getElementById('hint-nav');
+
+  vBtn.disabled = !canNav;
+  aBtn.disabled = !canNav;
+
+  if (canNav) {
+    vBtn.classList.add('blue');
+    aBtn.classList.add('purple');
+    hint.style.display = 'none';
+  } else {
+    vBtn.classList.remove('blue');
+    aBtn.classList.remove('purple');
+    hint.style.display = 'block';
+  }
+
+  updateNavMenuAccess();
+}
+
+function formatSize(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+  return (b/1024/1024).toFixed(1) + ' MB';
+}
+
+/* ═══════════════════════════════════════
+   DROP ZONE
+═══════════════════════════════════════ */
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); document.getElementById('drop-main-text').textContent = 'Déposez vos fichiers ici'; });
+dz.addEventListener('dragleave', () => { dz.classList.remove('dragover'); document.getElementById('drop-main-text').textContent = 'Glissez-déposez vos fichiers ici'; });
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('dragover');
+  document.getElementById('drop-main-text').textContent = 'Glissez-déposez vos fichiers ici';
+  handleFiles(e.dataTransfer.files);
+});
+
+/* ═══════════════════════════════════════
+   VISUALIZE — TABLE
+═══════════════════════════════════════ */
+function renderBadges() {
+  const container = document.getElementById('level-badges');
+  const activeFilter = document.getElementById('level-filter').value;
+  container.innerHTML = Object.entries(LEVEL_CFG).map(([lvl, cfg]) => {
+    const count  = LOGS.filter(l => l.level === lvl).length;
+    const active = activeFilter === lvl;
+    return `<button class="badge-btn" 
+      style="border-color:${active ? cfg.color : '#475569'};background:${active ? cfg.bg : 'transparent'};color:${cfg.color};"
+      onclick="toggleBadge('${lvl}')">
+      ${cfg.icon} ${lvl} <span style="opacity:.7">(${count})</span>
+    </button>`;
+  }).join('');
+}
+
+function toggleBadge(lvl) {
+  const sel = document.getElementById('level-filter');
+  sel.value = sel.value === lvl ? 'ALL' : lvl;
+  renderTable();
+  renderBadges();
+}
+
+function renderTable() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const level  = document.getElementById('level-filter').value;
+
+  const filtered = LOGS.filter(l => {
+    const matchLvl = level === 'ALL' || l.level === level;
+    const matchQ   = l.msg.toLowerCase().includes(search) || l.src.toLowerCase().includes(search);
+    return matchLvl && matchQ;
+  });
+
+  document.getElementById('visu-count').textContent = `${filtered.length} entrée(s) affichée(s)`;
+  renderBadges();
+
+  const tbody = document.getElementById('log-tbody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" class="no-results">Aucune entrée ne correspond à votre recherche</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(l => {
+    const cfg = LEVEL_CFG[l.level];
+    return `<tr>
+      <td class="ts">${l.ts}</td>
+      <td><span class="level-pill" style="background:${cfg.bg};color:${cfg.color}">${cfg.icon} ${l.level}</span></td>
+      <td class="src">${l.src}</td>
+      <td class="msg">${l.msg}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════
+   ANALYZE — CHARTS
+═══════════════════════════════════════ */
+function initCharts() {
+  const gridColor  = 'rgba(51,65,85,0.7)';
+  const tickColor  = '#94a3b8';
+  const tooltipCfg = {
+    backgroundColor: '#1e293b',
+    borderColor: '#334155',
+    borderWidth: 1,
+    titleColor: '#f1f5f9',
+    bodyColor: '#94a3b8',
+    padding: 10,
+  };
+
+  // Bar
+  new Chart(document.getElementById('chart-bar'), {
+    type: 'bar',
+    data: {
+      labels: ['INFO','WARN','ERROR','DEBUG'],
+      datasets: [{
+        data: [7, 3, 4, 2],
+        backgroundColor: ['#3b82f6','#f59e0b','#ef4444','#a78bfa'],
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { ...tooltipCfg } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: tickColor, font:{size:13} }, border:{display:false} },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor, font:{size:12} }, border:{display:false} }
+      }
+    }
+  });
+
+  // Doughnut
+  new Chart(document.getElementById('chart-doughnut'), {
+    type: 'doughnut',
+    data: {
+      labels: ['auth-service','api-gateway','db-connector','cache-manager','mail-service','scheduler'],
+      datasets: [{
+        data: [4, 3, 3, 2, 1, 2],
+        backgroundColor: ['#3b82f6','#f59e0b','#ef4444','#a78bfa','#34d399','#fb923c'],
+        borderColor: '#1e293b',
+        borderWidth: 2,
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '55%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { color: '#94a3b8', font:{size:12}, boxWidth:12, padding:10 }
+        },
+        tooltip: { ...tooltipCfg }
+      }
+    }
+  });
+
+  // Line
+  new Chart(document.getElementById('chart-line'), {
+    type: 'line',
+    data: {
+      labels: ['08:00','08:05','08:10','08:15','08:20','08:25'],
+      datasets: [
+        { label:'Erreurs',         data:[0,1,1,1,0,1], borderColor:'#ef4444', backgroundColor:'rgba(239,68,68,.1)',   tension:.4, pointRadius:5, fill:true },
+        { label:'Avertissements',  data:[0,1,0,1,1,0], borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,.1)',  tension:.4, pointRadius:5, fill:true },
+        { label:'Infos',           data:[1,2,1,1,1,1], borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.1)',  tension:.4, pointRadius:5, fill:true },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#94a3b8', font:{size:13}, boxWidth:14, padding:16 } },
+        tooltip: { ...tooltipCfg }
+      },
+      scales: {
+        x: { grid:{color:gridColor}, ticks:{color:tickColor}, border:{display:false} },
+        y: { grid:{color:gridColor}, ticks:{color:tickColor}, border:{display:false}, beginAtZero:true }
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
