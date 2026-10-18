@@ -10,159 +10,80 @@
 <body>
 <div id="app">
 
-  <!-- ══════════════ NAVBAR ══════════════ -->
+<!-- ══════════════ NAVBAR ══════════════ -->
   <nav>
     <div class="logo" onclick="goHome()">Analy<span>zer</span></div>
 
     <div class="nav-menu">
-      <!-- Accueil -->
       <button class="nav-link active" id="nav-home" onclick="goHome()">
-        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-        Accueil
+        Récupérer un fichier
       </button>
 
       <div class="nav-sep"></div>
 
-      <!-- Visualiser -->
       <button class="nav-link" id="nav-visualize" onclick="navMenuTo('visualize')" disabled>
-        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-          <circle cx="12" cy="12" r="3"/>
-        </svg>
-        Visualiser
+        Visualiser les logs
       </button>
 
-      <!-- Analyser -->
       <button class="nav-link" id="nav-analyze" onclick="navMenuTo('analyze')" disabled>
-        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="20" x2="18" y2="10"/>
-          <line x1="12" y1="20" x2="12" y2="4"/>
-          <line x1="6"  y1="20" x2="6"  y2="14"/>
-        </svg>
-        Analyser
+        Analyser les logs
+      </button>
+
+      <button class="nav-link" id="nav-config" onclick="showPage('config')">
+        Configurer l’application
       </button>
     </div>
   </nav>
 
-  <!-- ══════════════ PAGE HOME ══════════════ -->
-  <div id="page-home" class="page active">
-    <div class="home-inner">
-      <div class="page-title">
-        <h1>Analyseur de logs</h1>
-        <p>Charger un fichier, choisissez son format, puis visualisez et analysez.</p>
-      </div>
 
+<!-- ══════════════ PAGE HOME (RÉCUPÉRER UN FICHIER) ══════════════ -->
+  <div id="page-home" class="page active">
+    <div class="home-inner" style="max-width: 520px;">
       <div class="card">
         <div class="card-header">
-          <div class="icon-box">
-            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
-              <polyline points="10 9 9 9 8 9"/>
-            </svg>
-          </div>
           <div>
-            <h2>Import de fichiers de logs</h2>
-            <p>Analysez vos fichiers journaux</p>
+            <h2>Récupérer un fichier</h2>
           </div>
         </div>
 
         <div class="card-body">
-          <!-- Format -->
+          <!-- Adresse du serveur -->
           <div>
-            <label class="field-label" for="log-format">
-              Format des logs <span class="req">*</span>
-            </label>
-            <select id="log-format" onchange="updateNavBtns()">
-              <option value="">Sélectionner le format des logs...</option>
-              <option value="application">Logs applicatifs</option>
-              <option value="system">Logs système</option>
-              <option value="security">Logs de sécurité</option>
-              <option value="access">Logs d'accès (HTTP)</option>
-              <option value="error">Logs d'erreurs</option>
-              <option value="debug">Logs de débogage</option>
-              <option value="audit">Logs d'audit</option>
-              <option value="network">Logs réseau</option>
-              <option value="database">Logs base de données</option>
-              <option value="other">Autre</option>
+            <label class="field-label" for="server-ip">Adresse du serveur</label>
+            <input type="text" id="server-ip" class="input-field" placeholder="Ex : 127.0.0.1, 192.168.1.10 ou srv-web" value="127.0.0.1" />
+          </div>
+
+          <!-- Protocole -->
+          <div>
+            <label class="field-label" for="server-protocol">Protocole</label>
+              <option value="SCP">SCP</option>
             </select>
           </div>
 
-          <!-- Drop zone -->
-          <div>
-            <label class="field-label">Fichier(s) de logs</label>
-            <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
-              <input type="file" id="file-input" multiple accept=".log,.txt,.csv,.json,.gz,.zip" onchange="handleFiles(this.files)" />
-              <div class="upload-circle">
-                <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="16 16 12 12 8 16"/>
-                  <line x1="12" y1="12" x2="12" y2="21"/>
-                  <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-                </svg>
-              </div>
-              <p class="drop-main" id="drop-main-text">Glissez-déposez vos fichiers ici</p>
-              <p class="drop-sub">ou <a href="#" onclick="event.stopPropagation();document.getElementById('file-input').click();return false;">parcourez vos fichiers</a></p>
-              <p class="drop-formats">Formats supportés : .log, .txt, .csv, .json, .gz, .zip</p>
+          <!-- Champs Utilisateur / Mot de passe (visibles pour SSH et SCP) -->
+          <div id="auth-fields" style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <div>
+              <label class="field-label" for="server-user">Utilisateur</label>
+              <input type="text" id="server-user" class="input-field" placeholder="root / admin" />
+            </div>
+            <div>
+              <label class="field-label" for="server-pass">Mot de passe</label>
+              <input type="password" id="server-pass" class="input-field" placeholder="••••••••" />
             </div>
           </div>
 
-          <!-- File list -->
-          <div id="file-list-section" style="display:none;">
-            <p class="file-list-title" id="file-list-title">Fichiers sélectionnés (0)</p>
-            <div class="file-list" id="file-list"></div>
-          </div>
+          <!-- Bouton principal -->
+          <button class="btn btn-primary" onclick="recupererFichierServeur()">
+            Récupérer le fichier
+          </button>
 
-          <!-- Import buttons -->
-          <div class="btn-row">
-            <button class="btn btn-outline" id="btn-clear" onclick="clearFiles()" disabled>Effacer tout</button>
-            <button class="btn btn-primary" id="btn-import" onclick="importFiles()" disabled>
-              <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="16 16 12 12 8 16"/>
-                <line x1="12" y1="12" x2="12" y2="21"/>
-                <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-              </svg>
-              Importer les logs
-            </button>
-          </div>
-          <p class="warn" id="warn-format" style="display:none;">⚠️ Veuillez sélectionner le format des logs avant d'importer</p>
+          <!-- Petit message discret de succès -->
+          <p id="msg-succes" style="display: none; color: var(--green); text-align: center; font-size: 0.95rem;">
+            Récupération effectuée avec succès.
+          </p>
 
-          <!-- Divider -->
-          <div class="divider">
-            <div class="divider-line"></div>
-            <span class="divider-label">Accès aux outils</span>
-            <div class="divider-line"></div>
-          </div>
-
-          <!-- Nav buttons -->
-          <div class="nav-btns">
-            <button class="nav-btn" id="btn-visualize" onclick="navigateTo('visualize')" disabled>
-              <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
-              <div>
-                <div class="nav-btn-title">Visualiser les logs</div>
-                <div class="nav-btn-sub">Parcourir les entrées du fichier</div>
-              </div>
-            </button>
-            <button class="nav-btn" id="btn-analyze" onclick="navigateTo('analyze')" disabled>
-              <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="20" x2="18" y2="10"/>
-                <line x1="12" y1="20" x2="12" y2="4"/>
-                <line x1="6"  y1="20" x2="6"  y2="14"/>
-              </svg>
-              <div>
-                <div class="nav-btn-title">Analyser les logs</div>
-                <div class="nav-btn-sub">Statistiques et graphiques</div>
-              </div>
-            </button>
-          </div>
-          <p class="hint" id="hint-nav">Importez un fichier et sélectionnez un format pour accéder aux outils</p>
+          <!-- Gardé en invisible pour éviter toute erreur avec ton script existant -->
+          <div id="drop-zone" style="display: none;"></div>
         </div>
       </div>
     </div>
@@ -193,44 +114,32 @@
   <div id="page-visualize" class="page">
     <div class="visu-inner fade-up">
       <div class="page-header">
-        <div>
-          <h2>Visualisation des logs</h2>
-          <p id="visu-count">15 entrées affichées</p>
-        </div>
-        <button class="btn-back" onclick="goHome()">
-          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-          Retour
-        </button>
+        <h2>Visualiser les logs</h2>
+        <button class="btn-back" onclick="toggleFilters()">Filtrer</button>
       </div>
 
-      <div class="filters">
+      <!-- Barre de recherche masquée par défaut, affichée au clic sur "Filtrer" -->
+      <div class="filters" id="filters-bar" style="display: none;">
         <div class="search-wrap">
-          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input class="search-input" type="text" placeholder="Rechercher dans les logs..." id="search-input" oninput="renderTable()" />
+          <input class="search-input" style="padding-left: 1rem;" type="text" placeholder="Filtrer par IP, ressource, code HTTP ou navigateur..." id="search-input" oninput="renderTable()" />
         </div>
-        <select class="filter-select" id="level-filter" onchange="renderTable()">
-          <option value="ALL">Tous les niveaux</option>
-          <option value="INFO">INFO</option>
-          <option value="WARN">WARN</option>
-          <option value="ERROR">ERROR</option>
-          <option value="DEBUG">DEBUG</option>
-        </select>
+        <select id="level-filter" style="display: none;"><option value="ALL">ALL</option></select>
       </div>
 
-      <div class="level-badges" id="level-badges"></div>
+      <div id="level-badges" style="display: none;"></div>
+      <p id="visu-count" style="display: none;"></p>
 
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Horodatage</th>
-              <th>Niveau</th>
-              <th>Source</th>
-              <th>Message</th>
+              <th>Adresse IP</th>
+              <th>Date / heure</th>
+              <th>Méthode HTTP</th>
+              <th>Ressource demandée</th>
+              <th>Code HTTP</th>
+              <th>Taille de réponse</th>
+              <th>Navigateur</th>
             </tr>
           </thead>
           <tbody id="log-tbody"></tbody>
@@ -239,123 +148,20 @@
     </div>
   </div>
 
-  <!-- ══════════════ PAGE ANALYZE ══════════════ -->
+<!-- ══════════════ PAGE ANALYZE ══════════════ -->
   <div id="page-analyze" class="page">
     <div class="analyze-inner fade-up">
       <div class="page-header">
-        <div>
-          <h2>Analyse des logs</h2>
-          <p>Rapport généré le 07/10/2026 à 08:30</p>
-        </div>
-        <button class="btn-back" onclick="goHome()">
-          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-          Retour
-        </button>
+        <h2>Analyser les logs</h2>
       </div>
 
-      <!-- KPIs -->
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-top">
-            <span class="kpi-label">Total entrées</span>
-            <span class="kpi-icon" style="color:#3b82f6">
-              <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-            </span>
-          </div>
-          <div class="kpi-value" style="color:#3b82f6">16</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-top">
-            <span class="kpi-label">Erreurs</span>
-            <span class="kpi-icon" style="color:#f87171">
-              <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            </span>
-          </div>
-          <div class="kpi-value" style="color:#f87171">4</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-top">
-            <span class="kpi-label">Taux de succès</span>
-            <span class="kpi-icon" style="color:#34d399">
-              <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            </span>
-          </div>
-          <div class="kpi-value" style="color:#34d399">75%</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-top">
-            <span class="kpi-label">Plage temporelle</span>
-            <span class="kpi-icon" style="color:#a78bfa">
-              <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </span>
-          </div>
-          <div class="kpi-value" style="color:#a78bfa">26 min</div>
-        </div>
-      </div>
-
-      <!-- Charts row 1 -->
-      <div class="charts-row">
-        <div class="chart-card">
-          <h3>Distribution par niveau</h3>
-          <div class="chart-container">
-            <canvas id="chart-bar"></canvas>
-          </div>
-        </div>
-        <div class="chart-card">
-          <h3>Répartition par source</h3>
-          <div class="chart-container">
-            <canvas id="chart-doughnut"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- Chart row 2 -->
-      <div class="chart-card chart-full">
-        <h3>Évolution temporelle des événements</h3>
-        <div class="chart-container">
-          <canvas id="chart-line"></canvas>
-        </div>
-      </div>
-
-      <h3 class="sae-section-title" style="color: var(--red);"> Détection des requêtes sensibles (Analyse métier)</h3>
-      <div class="table-wrap" style="margin-bottom: 1.5rem;">
-        <table>
-          <thead>
-            <tr>
-              <th>Horodatage</th>
-              <th>Adresse IP</th>
-              <th>Requête / Ressource</th>
-              <th>Code HTTP</th>
-              <th>Type d'alerte détectée</th>
-            </tr>
-          </thead>
-          <tbody id="sae-tbody-sensibles">
-            <tr><td colspan="5" class="no-results">Importez un fichier access.log pour voir les alertes</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="sae-stats-grid">
+      <div class="sae-stats-grid" style="grid-template-columns: 1fr 1fr;">
         <div class="sae-stat-card">
-          <h3> Ressources / Fréquence</h3>
+          <h3>Fréquence des adresses IP</h3>
           <div class="table-wrap">
             <table>
               <thead>
-                <tr><th>Ressource</th><th style="width:90px">Fréq.</th></tr>
-              </thead>
-              <tbody id="sae-tbody-ressources"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="sae-stat-card">
-          <h3> Adresse IP / Fréquence</h3>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr><th>Adresse IP</th><th style="width:90px">Fréq.</th></tr>
+                <tr><th>Adresse IP</th><th style="width:100px">Fréquence</th></tr>
               </thead>
               <tbody id="sae-tbody-ips"></tbody>
             </table>
@@ -363,11 +169,11 @@
         </div>
 
         <div class="sae-stat-card">
-          <h3> Navigateur / Fréquence</h3>
+          <h3>Fréquence des navigateurs</h3>
           <div class="table-wrap">
             <table>
               <thead>
-                <tr><th>Navigateur</th><th style="width:90px">Fréq.</th></tr>
+                <tr><th>Navigateur</th><th style="width:100px">Fréquence</th></tr>
               </thead>
               <tbody id="sae-tbody-navigateurs"></tbody>
             </table>
@@ -375,17 +181,72 @@
         </div>
       </div>
 
-
-    </div>
+      <div class="sae-stat-card">
+        <h3>Requêtes sensibles / anomalies détectées</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date / heure</th>
+                <th>Adresse IP</th>
+                <th>Ressource demandée</th>
+                <th>Code HTTP</th>
+                <th>Anomalie détectée</th>
+              </tr>
+            </thead>
+            <tbody id="sae-tbody-sensibles"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>  
   </div>
 
+  <!-- ══════════════ PAGE CONFIGURER ══════════════ -->
+  <div id="page-config" class="page">
+    <div class="home-inner fade-up" style="max-width: 520px; margin: 2rem auto;">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>Configurer l’application</h2>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div>
+            <label class="field-label">Type de logs pris en charge</label>
+            <select>
+              <option value="apache">Apache (Common / Combined Log Format)</option>
+              <option value="syslog">Linux Syslog</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="field-label">Chemin connu du fichier access.log</label>
+            <input type="text" class="input-field" value="/var/log/apache2/access.log" readonly />
+          </div>
+
+          <div>
+            <label class="field-label">Port SSH / SCP par défaut</label>
+            <input type="number" class="input-field" value="22" />
+          </div>
+
+          <button class="btn btn-primary" onclick="document.getElementById('msg-cfg').style.display='block'">
+            Enregistrer
+          </button>
+          <p id="msg-cfg" style="display: none; color: var(--green); text-align: center; font-size: 0.95rem;">
+            Paramètres enregistrés.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
 /* ═══════════════════════════════════════
    DATA
 ═══════════════════════════════════════ */
-const LOGS = [
+let LOGS = [
   { id:1,  ts:"2026-10-07 08:01:12", level:"INFO",  src:"auth-service",    msg:"Connexion réussie pour l'utilisateur admin@company.com" },
   { id:2,  ts:"2026-10-07 08:02:45", level:"WARN",  src:"api-gateway",     msg:"Temps de réponse élevé détecté : 1 842 ms" },
   { id:3,  ts:"2026-10-07 08:03:01", level:"ERROR", src:"db-connector",    msg:"Échec de connexion à la base de données primaire, tentative de basculement..." },
@@ -800,236 +661,106 @@ function initCharts() {
 }
 
 
-const MODULES_LOGS = {
-  // Module Apache (Common & Combined Log Format : access.log)
-  apache: function(ligne, index) {
-    const regex = /^(\S+) \S+ \S+ \[([^\]]+)\] "(\S+) ([^"]+) \S+" (\d{3}) (\S+)(?: "[^"]*" "([^"]*)")?/;
-    const m = ligne.match(regex);
-    if (!m) return null;
+/* ═══════════════════════════════════════════════════════════════
+   ADAPTATION SELON LE DIAGRAMME DE SÉQUENCE (recupLog -> afficherLogs)
+═══════════════════════════════════════════════════════════════ */
 
-    const ip = m[1];
-    const date = m[2];
-    const methode = m[3];
-    const ressource = m[4];
-    const code = parseInt(m[5], 10);
-    const ua = m[7] || "Inconnu";
+// Données simulées du fichier access.log
+const CONTENU_SERVEUR_ACCESS_LOG = `192.168.1.10 - - [10/Oct/2026:08:01:12 +0200] "GET /index.html HTTP/1.1" 200 2326 "-" "Mozilla/5.0 Chrome/118.0"
+192.168.1.10 - - [10/Oct/2026:08:01:15 +0200] "GET /style.css HTTP/1.1" 200 1050 "-" "Mozilla/5.0 Chrome/118.0"
+192.168.1.25 - - [10/Oct/2026:08:04:22 +0200] "GET /produits.html HTTP/1.1" 200 4890 "-" "Mozilla/5.0 Firefox/119.0"
+10.0.0.99 - - [10/Oct/2026:08:05:01 +0200] "GET /admin/config.php HTTP/1.1" 403 280 "-" "Mozilla/5.0 Firefox/119.0"
+10.0.0.99 - - [10/Oct/2026:08:05:04 +0200] "GET /../../etc/passwd HTTP/1.1" 404 190 "-" "sqlmap/1.7.2"
+45.33.12.8 - - [10/Oct/2026:08:12:45 +0200] "GET /.env HTTP/1.1" 403 210 "-" "Nikto/2.1.6"`;
 
-    const navigateur = extraireNavigateur(ua);
-    const alerte = verifierRequeteSensible(ressource, code, ua);
+LOGS = [];
 
-    // On adapte le niveau (INFO, WARN, ERROR) pour que tes badges et filtres existants marchent !
-    let level = "INFO";
-    if (alerte) level = "ERROR";
-    else if (code >= 400) level = "WARN";
+// Étape 1 & 3 : recupLog() et cliquer "Afficher" (afficherLogs)
+function recupererEtAfficherLogs() {
+  const ipInput = document.getElementById('server-ip').value.trim();
+  const msgSucces = document.getElementById('msg-succes');
+  const msgErreur = document.getElementById('msg-erreur'); // Élément d'erreur optionnel
 
-    return {
-      id: index,
-      ts: date,
-      level: level,
-      src: ip,
-      methode: methode,
-      ressource: ressource,
-      code: code,
-      navigateur: navigateur,
-      alerte: alerte,
-      msg: `${methode} ${ressource} (HTTP ${code}) — ${navigateur}`
-    };
-  },
-
-  // Module Syslog Linux (/var/log/syslog)
-  syslog: function(ligne, index) {
-    const regex = /^([A-Z][a-z]{2}\s+\d+\s+\d{2}:\d{2}:\d{2})\s+(\S+)\s+([^:]+):\s+(.*)$/;
-    const m = ligne.match(regex);
-    if (!m) return null;
-
-    const msg = m[4];
-    const alerte = (msg.toLowerCase().includes("failed") || msg.toLowerCase().includes("error"))
-      ? "Événement système critique" : null;
-
-    return {
-      id: index,
-      ts: m[1],
-      level: alerte ? "ERROR" : "INFO",
-      src: m[2],
-      methode: "SYSLOG",
-      ressource: m[3],
-      code: alerte ? 500 : 200,
-      navigateur: "Linux Syslog",
-      alerte: alerte,
-      msg: msg
-    };
+  // BLOC IF du diagramme de séquence : Validation des paramètres et du fichier
+  if (ipInput === "") {
+    // else : [fichier invalide ou format invalide] / message d'erreur
+    if(msgErreur) {
+      msgErreur.style.display = 'block';
+      msgErreur.textContent = "Erreur : Paramètres invalides ou serveur introuvable.";
+    }
+    return;
   }
-};
 
-// Identifier simplement le navigateur à partir du User-Agent
+  // Simulation de l'action 4 : readAndAnalyse() (Lecture et formalisation)
+  const lignes = CONTENU_SERVEUR_ACCESS_LOG.split('\n');
+  LOGS = [];
+
+  lignes.forEach((l, i) => {
+    const parsed = parserLigneApache(l.trim(), i + 1);
+    if (parsed) LOGS.push(parsed);
+  });
+
+  if (LOGS.length > 0) {
+    // Si validé : Passage à la page tableau des logs (Étape 5 du diagramme)
+    if(msgErreur) msgErreur.style.display = 'none';
+    msgSucces.style.display = 'block';
+    msgSucces.textContent = "Récupération effectuée avec succès.";
+
+    // Déverrouillage des onglets de navigation
+    document.getElementById('nav-visualize').disabled = false;
+    document.getElementById('nav-analyze').disabled   = false;
+
+    // Bascule automatique vers la vue tableau après 1 seconde
+    setTimeout(() => {
+      showPage('visualize');
+      renderTable();
+      calculerStatsSAE();
+    }, 800);
+
+  } else {
+    // else : [fichier invalide ou format invalide]
+    alert("Erreur : Le fichier de log est vide ou mal formaté.");
+  }
+}
+
+// Fonction utilitaire de parsing Apache
+function parserLigneApache(ligne, index) {
+  const regex = /^(\S+) \S+ \S+ \[([^\]]+)\] "(\S+) ([^"]+) \S+" (\d{3}) (\S+)(?: "[^"]*" "([^"]*)")?/;
+  const m = ligne.match(regex);
+  if (!m) return null;
+
+  return {
+    id: index,
+    ts: m[2],
+    src: m[1],
+    methode: m[3],
+    ressource: m[4],
+    code: parseInt(m[5], 10),
+    taille: m[6] + " B",
+    navigateur: extraireNavigateur(m[7] || "Inconnu"),
+    alerte: verifierRequeteSensible(m[4], parseInt(m[5], 10), m[7] || "")
+  };
+}
+
 function extraireNavigateur(ua) {
   const t = ua.toLowerCase();
-  if (t.includes("sqlmap") || t.includes("nikto") || t.includes("nmap")) return "Scanner / Outil d'attaque";
-  if (t.includes("curl") || t.includes("wget") || t.includes("python")) return "Script (curl / bot)";
+  if (t.includes("sqlmap") || t.includes("nikto")) return "Scanner d'attaque";
   if (t.includes("firefox")) return "Firefox";
-  if (t.includes("edg"))     return "Edge";
   if (t.includes("chrome"))  return "Chrome";
   if (t.includes("safari"))  return "Safari";
   return "Autre";
 }
 
-// Détecter les requêtes sensibles (Analyse métier Administrateur Système/Réseau)
 function verifierRequeteSensible(ressource, code, ua) {
   const url = ressource.toLowerCase();
   const agent = ua.toLowerCase();
-
-  if (url.includes("../") || url.includes("/etc/passwd")) return "Traversée de répertoires (Directory Traversal)";
-  if (url.includes("'") || url.includes("or 1=1") || url.includes("select")) return "Tentative d'Injection SQL";
-  if (url.includes("/admin") || url.includes("wp-login") || url.includes(".env") || url.includes("config")) return "Accès ressource sensible";
-  if (agent.includes("sqlmap") || agent.includes("nikto")) return "Scan de vulnérabilités détecté";
-  if (code === 401 || code === 403 || code === 500) return "Erreur HTTP sensible (" + code + ")";
+  if (url.includes("../") || url.includes("/etc/passwd")) return "Traversée de répertoires";
+  if (url.includes("/admin") || url.includes(".env")) return "Accès ressource sensible";
+  if (agent.includes("sqlmap") || agent.includes("nikto")) return "Scan de vulnérabilités";
+  if (code === 401 || code === 403) return "Accès refusé (HTTP " + code + ")";
   return null;
 }
 
-// 2. Remplacement automatique de importFiles() pour lire réellement le fichier déposé
-importFiles = function() {
-  const fmt = document.getElementById('log-format').value;
-  if (!fmt) {
-    document.getElementById('warn-format').style.display = 'block';
-    return;
-  }
-  document.getElementById('warn-format').style.display = 'none';
-
-  if (uploadedFiles.length > 0) {
-    const fichier = uploadedFiles[0].file;
-    const reader = new FileReader();
-
-    reader.onload = function(e) {
-      const lignes = e.target.result.split('\n');
-      // Choisit le module syslog si "system" est sélectionné, sinon apache par défaut
-      const moduleChoisi = (fmt === 'system') ? MODULES_LOGS.syslog : MODULES_LOGS.apache;
-      const nouveauxLogs = [];
-
-      lignes.forEach((ligne, idx) => {
-        const resultat = moduleChoisi(ligne.trim(), idx + 1);
-        if (resultat) nouveauxLogs.push(resultat);
-      });
-
-      // Si le fichier contient bien des lignes reconnues, on met à jour LOGS
-      if (nouveauxLogs.length > 0) {
-        LOGS.length = 0;
-        nouveauxLogs.forEach(l => LOGS.push(l));
-        adapterColonnesTableauApache();
-        calculerStatsSAE();
-      }
-    };
-    reader.readAsText(fichier);
-  }
-
-  uploadedFiles = uploadedFiles.map(f => ({ ...f, status: 'success' }));
-  renderFileList();
-  updateNavBtns();
-};
-
-// 3. Adapter l'affichage du tableau de la page "Visualiser" pour afficher chaque champ en colonne
-function adapterColonnesTableauApache() {
-  const theadTr = document.querySelector('#page-visualize thead tr');
-  theadTr.innerHTML = `
-    <th>Horodatage</th>
-    <th>Niveau</th>
-    <th>Adresse IP</th>
-    <th>Ressource demandée</th>
-    <th>Code HTTP</th>
-    <th>Navigateur</th>
-  `;
-}
-
-// Surcharge de renderTable() pour afficher les colonnes d'access.log si présentes
-const ancienRenderTable = renderTable;
-renderTable = function() {
-  // Si c'est toujours les données de démo de base, on garde ton affichage d'origine
-  if (!LOGS[0] || !LOGS[0].ressource) {
-    ancienRenderTable();
-    return;
-  }
-
-  const search = document.getElementById('search-input').value.toLowerCase();
-  const level  = document.getElementById('level-filter').value;
-
-  const filtered = LOGS.filter(l => {
-    const matchLvl = level === 'ALL' || l.level === level;
-    const matchQ   = l.msg.toLowerCase().includes(search) || l.src.toLowerCase().includes(search);
-    return matchLvl && matchQ;
-  });
-
-  document.getElementById('visu-count').textContent = `${filtered.length} entrée(s) affichée(s)`;
-  renderBadges();
-
-  const tbody = document.getElementById('log-tbody');
-  if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="no-results">Aucune entrée ne correspond à votre recherche</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = filtered.map(l => {
-    const cfg = LEVEL_CFG[l.level];
-    return `<tr class="${l.alerte ? 'row-sensible' : ''}">
-      <td class="ts">${l.ts}</td>
-      <td><span class="level-pill" style="background:${cfg.bg};color:${cfg.color}">${cfg.icon} ${l.level}</span></td>
-      <td class="src">${l.src}</td>
-      <td class="msg" style="font-family:monospace">${l.methode} ${l.ressource}</td>
-      <td class="ts"><strong>${l.code}</strong></td>
-      <td class="msg">${l.navigateur}</td>
-    </tr>`;
-  }).join('');
-};
-
-// 4. Calculer et remplir les 4 tableaux de statistiques demandés dans la SAE
-function compterFrequencesSAE(propriete) {
-  const compte = {};
-  LOGS.forEach(l => {
-    const val = l[propriete] || "Inconnu";
-    compte[val] = (compte[val] || 0) + 1;
-  });
-  return Object.entries(compte).sort((a, b) => b[1] - a[1]);
-}
-
-function calculerStatsSAE() {
-  const freqRessources  = compterFrequencesSAE('ressource');
-  const freqIPs         = compterFrequencesSAE('src');
-  const freqNavigateurs = compterFrequencesSAE('navigateur');
-  const sensibles       = LOGS.filter(l => l.alerte !== null);
-
-  // Mise à jour des 4 compteurs KPI en haut de ta page Analyser
-  const kpiValues = document.querySelectorAll('.kpi-value');
-  if (kpiValues.length >= 3) {
-    kpiValues[0].textContent = LOGS.length;
-    kpiValues[1].textContent = sensibles.length;
-    const tauxSucces = Math.round(((LOGS.length - sensibles.length) / LOGS.length) * 100);
-    kpiValues[2].textContent = tauxSucces + "%";
-  }
-
-  // Remplissage des 3 tableaux de fréquences
-  document.getElementById('sae-tbody-ressources').innerHTML = freqRessources
-    .map(([res, nb]) => `<tr><td class="src">${res}</td><td><strong>${nb}</strong></td></tr>`).join('');
-
-  document.getElementById('sae-tbody-ips').innerHTML = freqIPs
-    .map(([ip, nb]) => `<tr><td class="src">${ip}</td><td><strong>${nb}</strong></td></tr>`).join('');
-
-  document.getElementById('sae-tbody-navigateurs').innerHTML = freqNavigateurs
-    .map(([nav, nb]) => `<tr><td class="msg">${nav}</td><td><strong>${nb}</strong></td></tr>`).join('');
-
-  // Remplissage du tableau des requêtes sensibles
-  const tbodySensibles = document.getElementById('sae-tbody-sensibles');
-  if (sensibles.length === 0) {
-    tbodySensibles.innerHTML = `<tr><td colspan="5" class="no-results">Aucune requête sensible détectée</td></tr>`;
-  } else {
-    tbodySensibles.innerHTML = sensibles.map(l => `
-      <tr class="row-sensible">
-        <td class="ts">${l.ts}</td>
-        <td class="src">${l.src}</td>
-        <td class="msg" style="font-family:monospace">${l.methode} ${l.ressource}</td>
-        <td class="ts"><strong style="color:var(--red)">${l.code}</strong></td>
-        <td class="msg" style="color:var(--red)">⚠️ ${l.alerte}</td>
-      </tr>
-    `).join('');
-  }
-}
 </script>
 </body>
 </html>
