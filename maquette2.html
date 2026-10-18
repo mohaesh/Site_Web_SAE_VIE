@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analyzer — Analyseur de logs</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="maquette.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════════ MENU LATÉRAL ══════════════ -->
+  <aside>
+    <div class="logo">Analy<span>zer</span></div>
+
+    <nav class="menu">
+      <button class="menu-link active" id="menu-fetch" onclick="showPage('fetch')">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Récupérer un fichier
+      </button>
+      <button class="menu-link" id="menu-visualize" onclick="showPage('visualize')">
+        <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        Visualiser les logs
+      </button>
+      <button class="menu-link" id="menu-analyze" onclick="showPage('analyze')">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Analyser les logs
+      </button>
+      <button class="menu-link" id="menu-config" onclick="showPage('config')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Configurer l'application
+      </button>
+    </nav>
+  </aside>
+
+  <main>
+
+    <!-- ══════════════ RÉCUPÉRER UN FICHIER ══════════════ -->
+    <section id="page-fetch" class="page active">
+      <div class="page-inner narrow">
+        <h1>Récupérer un fichier</h1>
+
+        <form class="form" onsubmit="fetchFile(event)">
+          <div>
+            <label for="server-address">Adresse du serveur</label>
+            <input type="text" id="server-address" placeholder="127.0.0.1" autocomplete="off" />
+          </div>
+
+          <div>
+            <label for="protocol">Protocole</label>
+            <select id="protocol" onchange="onProtocolChange()">
+              <option value="SSH">SSH</option>
+              <option value="SCP">SCP</option>
+              <option value="HTTP">HTTP</option>
+            </select>
+          </div>
+
+          <div id="credentials" class="form">
+            <div>
+              <label for="ssh-user">Utilisateur</label>
+              <input type="text" id="ssh-user" autocomplete="off" />
+            </div>
+            <div>
+              <label for="ssh-pass">Mot de passe</label>
+              <input type="password" id="ssh-pass" autocomplete="off" />
+            </div>
+          </div>
+
+          <div>
+            <button type="submit" class="btn btn-primary" id="btn-fetch">Récupérer le fichier</button>
+          </div>
+          <p class="msg" id="fetch-msg"></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- ══════════════ VISUALISER LES LOGS ══════════════ -->
+    <section id="page-visualize" class="page">
+      <div class="page-inner">
+        <div class="toolbar">
+          <h1>Visualiser les logs</h1>
+          <div class="filter-wrap">
+            <button class="btn btn-outline" onclick="toggleFilter()">Filtrer</button>
+            <div class="filter-panel hidden" id="filter-panel"></div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead id="log-thead"></thead>
+            <tbody id="log-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════ ANALYSER LES LOGS ══════════════ -->
+    <section id="page-analyze" class="page">
+      <div class="page-inner">
+        <h1>Analyser les logs</h1>
+
+        <div id="analyze-empty" class="empty">Aucune donnée à analyser. Récupérez d'abord un fichier.</div>
+
+        <div id="analyze-content" class="hidden">
+          <div class="charts-row">
+            <div class="card">
+              <h3>Fréquence des adresses IP</h3>
+              <div class="chart-container"><canvas id="chart-ip"></canvas></div>
+            </div>
+            <div class="card">
+              <h3>Fréquence des navigateurs</h3>
+              <div class="chart-container"><canvas id="chart-browser"></canvas></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Requêtes sensibles détectées</h3>
+            <ul class="anomaly-list" id="anomaly-list"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════ CONFIGURER L'APPLICATION ══════════════ -->
+    <section id="page-config" class="page">
+      <div class="page-inner narrow">
+        <h1>Configurer l'application</h1>
+
+        <div class="form">
+          <div>
+            <label>Type de logs pris en charge</label>
+            <input type="text" value="Apache — access.log" readonly />
+          </div>
+          <div>
+            <label>Chemin du fichier access.log</label>
+            <input type="text" value="/var/log/apache2/access.log" readonly />
+          </div>
+          <div>
+            <label>Protocole par défaut</label>
+            <select>
+              <option>SSH</option>
+              <option>SCP</option>
+              <option>HTTP</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   DONNÉES SIMULÉES (access.log Apache)
+═══════════════════════════════════════ */
+const FF  = "Firefox";
+const CH  = "Chrome";
+const SA  = "Safari";
+const ED  = "Edge";
+const CUR = "curl";
+
+const LOGS = [
+  { ip:"192.168.1.10",  ts:"18/Oct/2026:08:01:12", method:"GET",  res:"/index.html",                   code:200, size:5120,  browser:CH  },
+  { ip:"192.168.1.10",  ts:"18/Oct/2026:08:01:13", method:"GET",  res:"/css/style.css",                code:200, size:2048,  browser:CH  },
+  { ip:"192.168.1.22",  ts:"18/Oct/2026:08:02:45", method:"GET",  res:"/produits",                     code:200, size:14320, browser:FF  },
+  { ip:"192.168.1.22",  ts:"18/Oct/2026:08:03:01", method:"POST", res:"/login",                        code:302, size:0,     browser:FF  },
+  { ip:"10.0.0.5",      ts:"18/Oct/2026:08:05:33", method:"GET",  res:"/api/users",                    code:200, size:8870,  browser:CUR },
+  { ip:"192.168.1.35",  ts:"18/Oct/2026:08:07:14", method:"GET",  res:"/contact",                      code:200, size:3100,  browser:SA  },
+  { ip:"203.0.113.77",  ts:"18/Oct/2026:08:09:22", method:"GET",  res:"/admin",                        code:403, size:512,   browser:CUR },
+  { ip:"203.0.113.77",  ts:"18/Oct/2026:08:09:24", method:"GET",  res:"/.env",                         code:404, size:312,   browser:CUR },
+  { ip:"203.0.113.77",  ts:"18/Oct/2026:08:09:27", method:"GET",  res:"/wp-login.php",                 code:404, size:312,   browser:CUR },
+  { ip:"192.168.1.10",  ts:"18/Oct/2026:08:11:50", method:"GET",  res:"/images/logo.png",              code:200, size:18440, browser:CH  },
+  { ip:"198.51.100.14", ts:"18/Oct/2026:08:13:09", method:"GET",  res:"/produits?id=1' OR '1'='1",     code:500, size:1024,  browser:ED  },
+  { ip:"192.168.1.35",  ts:"18/Oct/2026:08:15:42", method:"GET",  res:"/a-propos",                     code:200, size:2780,  browser:SA  },
+  { ip:"198.51.100.14", ts:"18/Oct/2026:08:17:03", method:"GET",  res:"/../../etc/passwd",             code:400, size:400,   browser:ED  },
+  { ip:"192.168.1.22",  ts:"18/Oct/2026:08:19:28", method:"GET",  res:"/produits/42",                  code:200, size:6210,  browser:FF  },
+  { ip:"192.168.1.10",  ts:"18/Oct/2026:08:21:11", method:"GET",  res:"/favicon.ico",                  code:404, size:209,   browser:CH  },
+  { ip:"10.0.0.5",      ts:"18/Oct/2026:08:26:18", method:"GET",  res:"/api/orders",                   code:200, size:11900, browser:CUR },
+];
+
+const COLUMNS = [
+  { key:"ip",      label:"Adresse IP",     cls:"mono" },
+  { key:"ts",      label:"Date / heure",   cls:"mono" },
+  { key:"method",  label:"Méthode",        cls:""     },
+  { key:"res",     label:"Ressource",      cls:"res"  },
+  { key:"code",    label:"Code HTTP",      cls:""     },
+  { key:"size",    label:"Taille (octets)",cls:"mono" },
+  { key:"browser", label:"Navigateur",     cls:""     },
+];
+
+const SENSITIVE = [
+  { re:/\.env|passwd|\.\.\//i,        label:"Accès fichier sensible" },
+  { re:/' ?OR ?'|union select|--/i,   label:"Injection SQL suspectée" },
+  { re:/\/admin|wp-login/i,           label:"Page d'administration" },
+];
+
+/* ═══════════════════════════════════════
+   ÉTAT
+═══════════════════════════════════════ */
+let dataLoaded  = false;
+let visibleCols = COLUMNS.map(c => c.key);
+let charts      = [];
+
+/* ═══════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════ */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.menu-link').forEach(b => b.classList.remove('active'));
+  document.getElementById('menu-' + id).classList.add('active');
+
+  if (id === 'visualize') renderTable();
+  if (id === 'analyze')   renderAnalysis();
+}
+
+/* ═══════════════════════════════════════
+   RÉCUPÉRER UN FICHIER
+═══════════════════════════════════════ */
+function onProtocolChange() {
+  const p = document.getElementById('protocol').value;
+  document.getElementById('credentials').classList.toggle('hidden', p === 'HTTP');
+}
+
+function fetchFile(e) {
+  e.preventDefault();
+  const addr = document.getElementById('server-address').value.trim();
+  const msg  = document.getElementById('fetch-msg');
+  const btn  = document.getElementById('btn-fetch');
+  const prot = document.getElementById('protocol').value;
+
+  msg.className = 'msg';
+  if (!addr) { msg.textContent = "Veuillez saisir l'adresse du serveur."; msg.classList.add('err'); return; }
+  if (prot !== 'HTTP') {
+    const u = document.getElementById('ssh-user').value.trim();
+    const p = document.getElementById('ssh-pass').value;
+    if (!u || !p) { msg.textContent = "Veuillez renseigner l'utilisateur et le mot de passe."; msg.classList.add('err'); return; }
+  }
+
+  // Simulation de la récupération (aucun backend pour l'instant)
+  btn.disabled = true;
+  msg.textContent = '';
+  setTimeout(() => {
+    dataLoaded = true;
+    btn.disabled = false;
+    msg.textContent = 'Récupération effectuée avec succès.';
+    msg.classList.add('ok');
+  }, 900);
+}
+
+/* ═══════════════════════════════════════
+   VISUALISER
+═══════════════════════════════════════ */
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function toggleFilter() {
+  const panel = document.getElementById('filter-panel');
+  panel.classList.toggle('hidden');
+  if (!panel.classList.contains('hidden')) {
+    panel.innerHTML = COLUMNS.map(c =>
+      `<label><input type="checkbox" ${visibleCols.includes(c.key) ? 'checked' : ''} onchange="toggleCol('${c.key}')"> ${c.label}</label>`
+    ).join('');
+  }
+}
+
+function toggleCol(key) {
+  visibleCols = visibleCols.includes(key)
+    ? visibleCols.filter(k => k !== key)
+    : COLUMNS.filter(c => c.key === key || visibleCols.includes(c.key)).map(c => c.key);
+  renderTable();
+}
+
+function codeClass(c) { return c >= 500 ? 'code-err' : c >= 400 ? 'code-warn' : 'code-ok'; }
+
+function renderTable() {
+  const cols  = COLUMNS.filter(c => visibleCols.includes(c.key));
+  const thead = document.getElementById('log-thead');
+  const tbody = document.getElementById('log-tbody');
+
+  thead.innerHTML = '<tr>' + cols.map(c => `<th>${c.label}</th>`).join('') + '</tr>';
+
+  if (!dataLoaded) {
+    tbody.innerHTML = `<tr><td class="empty" colspan="${cols.length || 1}">Aucune donnée. Récupérez d'abord un fichier.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = LOGS.map(l =>
+    '<tr>' + cols.map(c => {
+      const cls = [c.cls, c.key === 'code' ? codeClass(l.code) : ''].join(' ').trim();
+      return `<td class="${cls}" ${c.key === 'res' ? `title="${esc(l.res)}"` : ''}>${esc(l[c.key])}</td>`;
+    }).join('') + '</tr>'
+  ).join('');
+}
+
+/* ═══════════════════════════════════════
+   ANALYSER
+═══════════════════════════════════════ */
+function countBy(key) {
+  const m = {};
+  LOGS.forEach(l => m[l[key]] = (m[l[key]] || 0) + 1);
+  return Object.entries(m).sort((a, b) => b[1] - a[1]);
+}
+
+function renderAnalysis() {
+  document.getElementById('analyze-empty').classList.toggle('hidden', dataLoaded);
+  document.getElementById('analyze-content').classList.toggle('hidden', !dataLoaded);
+  if (!dataLoaded) return;
+
+  charts.forEach(c => c.destroy());
+  charts = [];
+
+  const tick = '#8b98b5', grid = 'rgba(36,49,79,0.8)';
+  const tooltip = { backgroundColor:'#111a2e', borderColor:'#24314f', borderWidth:1, titleColor:'#e6ebf5', bodyColor:'#8b98b5' };
+
+  // IP
+  const ips = countBy('ip');
+  charts.push(new Chart(document.getElementById('chart-ip'), {
+    type: 'bar',
+    data: { labels: ips.map(i => i[0]), datasets: [{ data: ips.map(i => i[1]), backgroundColor: '#3b6fd4', borderRadius: 4 }] },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip },
+      scales: {
+        x: { grid: { color: grid }, ticks: { color: tick, precision: 0 }, border: { display: false } },
+        y: { grid: { display: false }, ticks: { color: tick }, border: { display: false } }
+      }
+    }
+  }));
+
+  // Navigateurs
+  const br = countBy('browser');
+  charts.push(new Chart(document.getElementById('chart-browser'), {
+    type: 'doughnut',
+    data: {
+      labels: br.map(b => b[0]),
+      datasets: [{
+        data: br.map(b => b[1]),
+        backgroundColor: ['#3b6fd4','#5b8def','#2a4d9b','#7ea5f5','#1d3573'],
+        borderColor: '#111a2e', borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      plugins: { legend: { position: 'right', labels: { color: tick, boxWidth: 12 } }, tooltip }
+    }
+  }));
+
+  // Requêtes sensibles
+  const found = [];
+  LOGS.forEach(l => {
+    const rule = SENSITIVE.find(s => s.re.test(l.res));
+    if (rule) found.push({ label: rule.label, ip: l.ip, res: l.res });
+  });
+  document.getElementById('anomaly-list').innerHTML = found.length
+    ? found.map(f => `<li><span class="tag">${esc(f.label)}</span><span class="ip">${esc(f.ip)}</span><span class="url">${esc(f.res)}</span></li>`).join('')
+    : '<li>Aucune requête sensible détectée.</li>';
+}
+
+/* Initialisation */
+onProtocolChange();
+</script>
+</body>
+</html>
