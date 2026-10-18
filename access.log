@@ -1,0 +1,6 @@
+192.168.1.10 - - [10/Oct/2026:08:01:12 +0200] "GET /index.html HTTP/1.1" 200 2326 "-" "Mozilla/5.0 Chrome/118.0"
+192.168.1.10 - - [10/Oct/2026:08:01:15 +0200] "GET /style.css HTTP/1.1" 200 1050 "-" "Mozilla/5.0 Chrome/118.0"
+192.168.1.25 - - [10/Oct/2026:08:04:22 +0200] "GET /produits.html HTTP/1.1" 200 4890 "-" "Mozilla/5.0 Firefox/119.0"
+10.0.0.99 - - [10/Oct/2026:08:05:01 +0200] "GET /admin/config.php HTTP/1.1" 403 280 "-" "Mozilla/5.0 Firefox/119.0"
+10.0.0.99 - - [10/Oct/2026:08:05:04 +0200] "GET /../../etc/passwd HTTP/1.1" 404 190 "-" "sqlmap/1.7.2"
+45.33.12.8 - - [10/Oct/2026:08:12:45 +0200] "GET /.env HTTP/1.1" 403 210 "-" "Nikto/2.1.6"
