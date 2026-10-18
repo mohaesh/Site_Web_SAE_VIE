@@ -601,3 +601,21 @@
 .row-sensible {
   background: rgba(248, 113, 113, 0.12);
 }
+
+
+/* Style des champs texte (Serveur, Utilisateur, Mot de passe, Config) */
+.input-field {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  color: #fff;
+  border-radius: 0.75rem;
+  padding: 0.9rem 1.25rem;
+  font-size: 1rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .2s;
+}
+.input-field:focus {
+  border-color: var(--blue);
+}
