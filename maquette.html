@@ -318,6 +318,64 @@
           <canvas id="chart-line"></canvas>
         </div>
       </div>
+
+      <h3 class="sae-section-title" style="color: var(--red);"> Détection des requêtes sensibles (Analyse métier)</h3>
+      <div class="table-wrap" style="margin-bottom: 1.5rem;">
+        <table>
+          <thead>
+            <tr>
+              <th>Horodatage</th>
+              <th>Adresse IP</th>
+              <th>Requête / Ressource</th>
+              <th>Code HTTP</th>
+              <th>Type d'alerte détectée</th>
+            </tr>
+          </thead>
+          <tbody id="sae-tbody-sensibles">
+            <tr><td colspan="5" class="no-results">Importez un fichier access.log pour voir les alertes</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="sae-stats-grid">
+        <div class="sae-stat-card">
+          <h3> Ressources / Fréquence</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Ressource</th><th style="width:90px">Fréq.</th></tr>
+              </thead>
+              <tbody id="sae-tbody-ressources"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="sae-stat-card">
+          <h3> Adresse IP / Fréquence</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Adresse IP</th><th style="width:90px">Fréq.</th></tr>
+              </thead>
+              <tbody id="sae-tbody-ips"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="sae-stat-card">
+          <h3> Navigateur / Fréquence</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Navigateur</th><th style="width:90px">Fréq.</th></tr>
+              </thead>
+              <tbody id="sae-tbody-navigateurs"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+
     </div>
   </div>
 
@@ -739,6 +797,238 @@ function initCharts() {
       }
     }
   });
+}
+
+
+const MODULES_LOGS = {
+  // Module Apache (Common & Combined Log Format : access.log)
+  apache: function(ligne, index) {
+    const regex = /^(\S+) \S+ \S+ \[([^\]]+)\] "(\S+) ([^"]+) \S+" (\d{3}) (\S+)(?: "[^"]*" "([^"]*)")?/;
+    const m = ligne.match(regex);
+    if (!m) return null;
+
+    const ip = m[1];
+    const date = m[2];
+    const methode = m[3];
+    const ressource = m[4];
+    const code = parseInt(m[5], 10);
+    const ua = m[7] || "Inconnu";
+
+    const navigateur = extraireNavigateur(ua);
+    const alerte = verifierRequeteSensible(ressource, code, ua);
+
+    // On adapte le niveau (INFO, WARN, ERROR) pour que tes badges et filtres existants marchent !
+    let level = "INFO";
+    if (alerte) level = "ERROR";
+    else if (code >= 400) level = "WARN";
+
+    return {
+      id: index,
+      ts: date,
+      level: level,
+      src: ip,
+      methode: methode,
+      ressource: ressource,
+      code: code,
+      navigateur: navigateur,
+      alerte: alerte,
+      msg: `${methode} ${ressource} (HTTP ${code}) — ${navigateur}`
+    };
+  },
+
+  // Module Syslog Linux (/var/log/syslog)
+  syslog: function(ligne, index) {
+    const regex = /^([A-Z][a-z]{2}\s+\d+\s+\d{2}:\d{2}:\d{2})\s+(\S+)\s+([^:]+):\s+(.*)$/;
+    const m = ligne.match(regex);
+    if (!m) return null;
+
+    const msg = m[4];
+    const alerte = (msg.toLowerCase().includes("failed") || msg.toLowerCase().includes("error"))
+      ? "Événement système critique" : null;
+
+    return {
+      id: index,
+      ts: m[1],
+      level: alerte ? "ERROR" : "INFO",
+      src: m[2],
+      methode: "SYSLOG",
+      ressource: m[3],
+      code: alerte ? 500 : 200,
+      navigateur: "Linux Syslog",
+      alerte: alerte,
+      msg: msg
+    };
+  }
+};
+
+// Identifier simplement le navigateur à partir du User-Agent
+function extraireNavigateur(ua) {
+  const t = ua.toLowerCase();
+  if (t.includes("sqlmap") || t.includes("nikto") || t.includes("nmap")) return "Scanner / Outil d'attaque";
+  if (t.includes("curl") || t.includes("wget") || t.includes("python")) return "Script (curl / bot)";
+  if (t.includes("firefox")) return "Firefox";
+  if (t.includes("edg"))     return "Edge";
+  if (t.includes("chrome"))  return "Chrome";
+  if (t.includes("safari"))  return "Safari";
+  return "Autre";
+}
+
+// Détecter les requêtes sensibles (Analyse métier Administrateur Système/Réseau)
+function verifierRequeteSensible(ressource, code, ua) {
+  const url = ressource.toLowerCase();
+  const agent = ua.toLowerCase();
+
+  if (url.includes("../") || url.includes("/etc/passwd")) return "Traversée de répertoires (Directory Traversal)";
+  if (url.includes("'") || url.includes("or 1=1") || url.includes("select")) return "Tentative d'Injection SQL";
+  if (url.includes("/admin") || url.includes("wp-login") || url.includes(".env") || url.includes("config")) return "Accès ressource sensible";
+  if (agent.includes("sqlmap") || agent.includes("nikto")) return "Scan de vulnérabilités détecté";
+  if (code === 401 || code === 403 || code === 500) return "Erreur HTTP sensible (" + code + ")";
+  return null;
+}
+
+// 2. Remplacement automatique de importFiles() pour lire réellement le fichier déposé
+importFiles = function() {
+  const fmt = document.getElementById('log-format').value;
+  if (!fmt) {
+    document.getElementById('warn-format').style.display = 'block';
+    return;
+  }
+  document.getElementById('warn-format').style.display = 'none';
+
+  if (uploadedFiles.length > 0) {
+    const fichier = uploadedFiles[0].file;
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+      const lignes = e.target.result.split('\n');
+      // Choisit le module syslog si "system" est sélectionné, sinon apache par défaut
+      const moduleChoisi = (fmt === 'system') ? MODULES_LOGS.syslog : MODULES_LOGS.apache;
+      const nouveauxLogs = [];
+
+      lignes.forEach((ligne, idx) => {
+        const resultat = moduleChoisi(ligne.trim(), idx + 1);
+        if (resultat) nouveauxLogs.push(resultat);
+      });
+
+      // Si le fichier contient bien des lignes reconnues, on met à jour LOGS
+      if (nouveauxLogs.length > 0) {
+        LOGS.length = 0;
+        nouveauxLogs.forEach(l => LOGS.push(l));
+        adapterColonnesTableauApache();
+        calculerStatsSAE();
+      }
+    };
+    reader.readAsText(fichier);
+  }
+
+  uploadedFiles = uploadedFiles.map(f => ({ ...f, status: 'success' }));
+  renderFileList();
+  updateNavBtns();
+};
+
+// 3. Adapter l'affichage du tableau de la page "Visualiser" pour afficher chaque champ en colonne
+function adapterColonnesTableauApache() {
+  const theadTr = document.querySelector('#page-visualize thead tr');
+  theadTr.innerHTML = `
+    <th>Horodatage</th>
+    <th>Niveau</th>
+    <th>Adresse IP</th>
+    <th>Ressource demandée</th>
+    <th>Code HTTP</th>
+    <th>Navigateur</th>
+  `;
+}
+
+// Surcharge de renderTable() pour afficher les colonnes d'access.log si présentes
+const ancienRenderTable = renderTable;
+renderTable = function() {
+  // Si c'est toujours les données de démo de base, on garde ton affichage d'origine
+  if (!LOGS[0] || !LOGS[0].ressource) {
+    ancienRenderTable();
+    return;
+  }
+
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const level  = document.getElementById('level-filter').value;
+
+  const filtered = LOGS.filter(l => {
+    const matchLvl = level === 'ALL' || l.level === level;
+    const matchQ   = l.msg.toLowerCase().includes(search) || l.src.toLowerCase().includes(search);
+    return matchLvl && matchQ;
+  });
+
+  document.getElementById('visu-count').textContent = `${filtered.length} entrée(s) affichée(s)`;
+  renderBadges();
+
+  const tbody = document.getElementById('log-tbody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="no-results">Aucune entrée ne correspond à votre recherche</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(l => {
+    const cfg = LEVEL_CFG[l.level];
+    return `<tr class="${l.alerte ? 'row-sensible' : ''}">
+      <td class="ts">${l.ts}</td>
+      <td><span class="level-pill" style="background:${cfg.bg};color:${cfg.color}">${cfg.icon} ${l.level}</span></td>
+      <td class="src">${l.src}</td>
+      <td class="msg" style="font-family:monospace">${l.methode} ${l.ressource}</td>
+      <td class="ts"><strong>${l.code}</strong></td>
+      <td class="msg">${l.navigateur}</td>
+    </tr>`;
+  }).join('');
+};
+
+// 4. Calculer et remplir les 4 tableaux de statistiques demandés dans la SAE
+function compterFrequencesSAE(propriete) {
+  const compte = {};
+  LOGS.forEach(l => {
+    const val = l[propriete] || "Inconnu";
+    compte[val] = (compte[val] || 0) + 1;
+  });
+  return Object.entries(compte).sort((a, b) => b[1] - a[1]);
+}
+
+function calculerStatsSAE() {
+  const freqRessources  = compterFrequencesSAE('ressource');
+  const freqIPs         = compterFrequencesSAE('src');
+  const freqNavigateurs = compterFrequencesSAE('navigateur');
+  const sensibles       = LOGS.filter(l => l.alerte !== null);
+
+  // Mise à jour des 4 compteurs KPI en haut de ta page Analyser
+  const kpiValues = document.querySelectorAll('.kpi-value');
+  if (kpiValues.length >= 3) {
+    kpiValues[0].textContent = LOGS.length;
+    kpiValues[1].textContent = sensibles.length;
+    const tauxSucces = Math.round(((LOGS.length - sensibles.length) / LOGS.length) * 100);
+    kpiValues[2].textContent = tauxSucces + "%";
+  }
+
+  // Remplissage des 3 tableaux de fréquences
+  document.getElementById('sae-tbody-ressources').innerHTML = freqRessources
+    .map(([res, nb]) => `<tr><td class="src">${res}</td><td><strong>${nb}</strong></td></tr>`).join('');
+
+  document.getElementById('sae-tbody-ips').innerHTML = freqIPs
+    .map(([ip, nb]) => `<tr><td class="src">${ip}</td><td><strong>${nb}</strong></td></tr>`).join('');
+
+  document.getElementById('sae-tbody-navigateurs').innerHTML = freqNavigateurs
+    .map(([nav, nb]) => `<tr><td class="msg">${nav}</td><td><strong>${nb}</strong></td></tr>`).join('');
+
+  // Remplissage du tableau des requêtes sensibles
+  const tbodySensibles = document.getElementById('sae-tbody-sensibles');
+  if (sensibles.length === 0) {
+    tbodySensibles.innerHTML = `<tr><td colspan="5" class="no-results">Aucune requête sensible détectée</td></tr>`;
+  } else {
+    tbodySensibles.innerHTML = sensibles.map(l => `
+      <tr class="row-sensible">
+        <td class="ts">${l.ts}</td>
+        <td class="src">${l.src}</td>
+        <td class="msg" style="font-family:monospace">${l.methode} ${l.ressource}</td>
+        <td class="ts"><strong style="color:var(--red)">${l.code}</strong></td>
+        <td class="msg" style="color:var(--red)">⚠️ ${l.alerte}</td>
+      </tr>
+    `).join('');
+  }
 }
 </script>
 </body>
