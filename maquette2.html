@@ -4,364 +4,807 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Analyzer — Analyseur de logs</title>
+  <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="maquette.css" />
 </head>
 <body>
-<div id="app">
+<div id="az-app">
 
-  <!-- ══════════════ MENU LATÉRAL ══════════════ -->
-  <aside>
-    <div class="logo">Analy<span>zer</span></div>
-
-    <nav class="menu">
-      <button class="menu-link active" id="menu-fetch" onclick="showPage('fetch')">
-        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Récupérer un fichier
+  <!-- ═════════ NAVBAR ═════════ -->
+  <nav class="az-nav">
+    <button class="az-logo" onclick="goHome()">Analy<span>zer</span></button>
+    <div class="az-nav-menu">
+      <button class="az-nav-link az-active" id="nav-home" onclick="goHome()">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Accueil
       </button>
-      <button class="menu-link" id="menu-visualize" onclick="showPage('visualize')">
+      <div class="az-nav-sep"></div>
+      <button class="az-nav-link" id="nav-visualize" onclick="navigateTo('visualize')" disabled>
         <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        Visualiser les logs
+        Visualiser
       </button>
-      <button class="menu-link" id="menu-analyze" onclick="showPage('analyze')">
+      <button class="az-nav-link" id="nav-analyze" onclick="navigateTo('analyze')" disabled>
         <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        Analyser les logs
+        Analyser
       </button>
-      <button class="menu-link" id="menu-config" onclick="showPage('config')">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        Configurer l'application
+      <div class="az-nav-sep"></div>
+      <button class="az-nav-link" id="nav-config" onclick="showPage('config')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Configurer
       </button>
-    </nav>
-  </aside>
+    </div>
+  </nav>
 
-  <main>
+  <!-- ═════════ ACCUEIL ═════════ -->
+  <section id="az-page-home" class="az-page az-active">
+    <div class="az-home-inner">
+      <div class="az-page-title">
+        <h1>Analyseur de logs</h1>
+        <p>Récupérez vos logs via SCP, puis visualisez et analysez.</p>
+      </div>
 
-    <!-- ══════════════ RÉCUPÉRER UN FICHIER ══════════════ -->
-    <section id="page-fetch" class="page active">
-      <div class="page-inner narrow">
-        <h1>Récupérer un fichier</h1>
-
-        <form class="form" onsubmit="fetchFile(event)">
-          <div>
-            <label for="server-address">Adresse du serveur</label>
-            <input type="text" id="server-address" placeholder="127.0.0.1" autocomplete="off" />
+      <div class="az-card az-fade-up">
+        <div class="az-card-header">
+          <div class="az-icon-box green">
+            <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.77a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.73 16z"/></svg>
           </div>
-
           <div>
-            <label for="protocol">Protocole</label>
-            <select id="protocol" onchange="onProtocolChange()">
-              <option value="SSH">SSH</option>
-              <option value="SCP">SCP</option>
-              <option value="HTTP">HTTP</option>
-            </select>
+            <h2>Récupérer via SCP <span class="az-scp-badge">SCP</span></h2>
+            <p>Téléchargez un fichier de logs depuis un serveur distant</p>
           </div>
+        </div>
 
-          <div id="credentials" class="form">
+        <form class="az-card-body" id="scp-form" onsubmit="fetchScp(event)">
+          <div class="az-grid-2">
             <div>
-              <label for="ssh-user">Utilisateur</label>
-              <input type="text" id="ssh-user" autocomplete="off" />
+              <label class="az-field-label" for="scp-host">Adresse du serveur</label>
+              <input class="az-input" type="text" id="scp-host" placeholder="192.168.1.1" autocomplete="off" />
             </div>
             <div>
-              <label for="ssh-pass">Mot de passe</label>
-              <input type="password" id="ssh-pass" autocomplete="off" />
+              <label class="az-field-label" for="scp-type">Type de logs</label>
+              <select class="az-select" id="scp-type" onchange="updateResolvedPath()">
+                <option value="apache">access.log — Apache (Common/Combined)</option>
+                <option value="syslog">syslog — Linux Syslog</option>
+              </select>
+            </div>
+            <div>
+              <label class="az-field-label" for="scp-user">Utilisateur</label>
+              <input class="az-input" type="text" id="scp-user" placeholder="root" autocomplete="off" />
+            </div>
+            <div>
+              <label class="az-field-label" for="scp-pass">Mot de passe</label>
+              <input class="az-input" type="password" id="scp-pass" placeholder="••••••••" autocomplete="off" />
             </div>
           </div>
 
           <div>
-            <button type="submit" class="btn btn-primary" id="btn-fetch">Récupérer le fichier</button>
+            <label class="az-field-label">Chemin du fichier distant <small>(mis à jour selon le type de logs)</small></label>
+            <div class="az-path-box">
+              <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <code id="scp-path">/var/log/apache2/access.log</code>
+            </div>
           </div>
-          <p class="msg" id="fetch-msg"></p>
+
+          <div class="az-btn-row">
+            <button type="submit" class="az-btn az-btn-primary" id="scp-btn">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span id="scp-btn-label">Récupérer le fichier</span>
+            </button>
+          </div>
+          <p class="az-scp-msg" id="scp-msg"></p>
+
+          <div class="az-divider">
+            <div class="az-divider-line"></div><span class="az-divider-label">Accès aux outils</span><div class="az-divider-line"></div>
+          </div>
+
+          <div class="az-nav-btns">
+            <button type="button" class="az-nav-btn" id="home-btn-visualize" disabled onclick="navigateTo('visualize')">
+              <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <div><div class="az-nav-btn-title">Visualiser les logs</div><div class="az-nav-btn-sub">Parcourir les entrées du fichier</div></div>
+            </button>
+            <button type="button" class="az-nav-btn" id="home-btn-analyze" disabled onclick="navigateTo('analyze')">
+              <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              <div><div class="az-nav-btn-title">Analyser les logs</div><div class="az-nav-btn-sub">Statistiques et graphiques</div></div>
+            </button>
+          </div>
+          <p class="az-hint" id="home-hint">Récupérez un fichier via SCP pour accéder aux outils</p>
         </form>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- ══════════════ VISUALISER LES LOGS ══════════════ -->
-    <section id="page-visualize" class="page">
-      <div class="page-inner">
-        <div class="toolbar">
-          <h1>Visualiser les logs</h1>
-          <div class="filter-wrap">
-            <button class="btn btn-outline" onclick="toggleFilter()">Filtrer</button>
-            <div class="filter-panel hidden" id="filter-panel"></div>
-          </div>
+  <!-- ═════════ CHARGEMENT ═════════ -->
+  <section id="az-page-loading" class="az-page">
+    <div class="az-loading-inner">
+      <div class="az-spinner-wrap">
+        <svg viewBox="0 0 90 90">
+          <circle class="az-spinner-bg" cx="45" cy="45" r="38"></circle>
+          <circle class="az-spinner-fg" id="spinner-fg" cx="45" cy="45" r="38"></circle>
+        </svg>
+        <div class="az-spinner-pct" id="loading-pct">0%</div>
+      </div>
+      <div style="text-align:center">
+        <div class="az-loading-title" id="loading-title">Préparation de la visualisation</div>
+        <div class="az-loading-step" id="loading-step">Lecture du fichier…</div>
+      </div>
+      <div class="az-progress-bg"><div class="az-progress-fg" id="loading-bar"></div></div>
+      <div class="az-step-dots" id="loading-dots"></div>
+    </div>
+  </section>
+
+  <!-- ═════════ VISUALISER ═════════ -->
+  <section id="az-page-visualize" class="az-page">
+    <div class="az-visu-inner az-fade-up">
+      <div class="az-page-header">
+        <div>
+          <h2>Visualisation des logs</h2>
+          <p id="visu-count">0 entrée(s) affichée(s)</p>
         </div>
+        <button class="az-btn-back" onclick="goHome()">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          Retour
+        </button>
+      </div>
 
-        <div class="table-wrap">
-          <table>
-            <thead id="log-thead"></thead>
-            <tbody id="log-tbody"></tbody>
-          </table>
+      <div class="az-filters">
+        <div class="az-search-wrap">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="az-search-input" type="text" id="visu-search" placeholder="Rechercher dans les logs…" oninput="renderTable()" />
+        </div>
+        <select class="az-filter-select" id="visu-level" onchange="renderTable()">
+          <option value="ALL">Tous les niveaux</option>
+          <option value="INFO">INFO</option>
+          <option value="WARN">WARN</option>
+          <option value="ERROR">ERROR</option>
+          <option value="DEBUG">DEBUG</option>
+        </select>
+      </div>
+
+      <div class="az-level-badges" id="visu-badges"></div>
+
+      <div class="az-table-wrap">
+        <table>
+          <thead id="visu-thead"></thead>
+          <tbody id="visu-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════ ANALYSER ═════════ -->
+  <section id="az-page-analyze" class="az-page">
+    <div class="az-analyze-inner az-fade-up">
+      <div class="az-page-header">
+        <div>
+          <h2>Analyse des logs</h2>
+          <p id="analyze-date">Rapport généré</p>
+        </div>
+        <button class="az-btn-back" onclick="goHome()">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          Retour
+        </button>
+      </div>
+
+      <div class="az-kpi-grid">
+        <div class="az-kpi-card">
+          <div class="az-kpi-top"><span class="az-kpi-label">Total entrées</span>
+            <span class="az-kpi-icon" style="color:#3b82f6"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span></div>
+          <div class="az-kpi-value" style="color:#3b82f6" id="kpi-total">0</div>
+        </div>
+        <div class="az-kpi-card">
+          <div class="az-kpi-top"><span class="az-kpi-label">Erreurs</span>
+            <span class="az-kpi-icon" style="color:#f87171"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span></div>
+          <div class="az-kpi-value" style="color:#f87171" id="kpi-err">0</div>
+        </div>
+        <div class="az-kpi-card">
+          <div class="az-kpi-top"><span class="az-kpi-label">Taux de succès</span>
+            <span class="az-kpi-icon" style="color:#34d399"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span></div>
+          <div class="az-kpi-value" style="color:#34d399" id="kpi-rate">0%</div>
+        </div>
+        <div class="az-kpi-card">
+          <div class="az-kpi-top"><span class="az-kpi-label">Alertes sensibles</span>
+            <span class="az-kpi-icon" style="color:#a78bfa"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span></div>
+          <div class="az-kpi-value" style="color:#a78bfa" id="kpi-alert">0</div>
         </div>
       </div>
-    </section>
 
-    <!-- ══════════════ ANALYSER LES LOGS ══════════════ -->
-    <section id="page-analyze" class="page">
-      <div class="page-inner">
-        <h1>Analyser les logs</h1>
+      <div class="az-charts-row">
+        <div class="az-chart-card"><h3>Distribution par niveau</h3><div class="az-chart-container"><canvas id="chart-bar"></canvas></div></div>
+        <div class="az-chart-card"><h3>Répartition par source</h3><div class="az-chart-container"><canvas id="chart-dough"></canvas></div></div>
+      </div>
 
-        <div id="analyze-empty" class="empty">Aucune donnée à analyser. Récupérez d'abord un fichier.</div>
+      <div class="az-chart-card az-chart-full">
+        <h3>Évolution temporelle des événements</h3>
+        <div class="az-chart-container"><canvas id="chart-line"></canvas></div>
+      </div>
 
-        <div id="analyze-content" class="hidden">
-          <div class="charts-row">
-            <div class="card">
-              <h3>Fréquence des adresses IP</h3>
-              <div class="chart-container"><canvas id="chart-ip"></canvas></div>
+      <p class="az-section-title">⚠ Détection des requêtes sensibles</p>
+      <div class="az-table-wrap az-mb">
+        <table>
+          <thead id="sens-thead"></thead>
+          <tbody id="sens-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="az-stats-grid hidden" id="stats-grid"></div>
+    </div>
+  </section>
+
+  <!-- ═════════ CONFIGURER ═════════ -->
+  <section id="az-page-config" class="az-page">
+
+    <!-- Login -->
+    <div class="az-config-login-wrap" id="config-login">
+      <div class="az-config-login-card az-fade-up">
+        <div class="az-config-login-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </div>
+        <div class="az-config-login-title">
+          <h2>Accès à la configuration</h2>
+          <p>Identifiez-vous pour accéder aux paramètres</p>
+        </div>
+        <form class="az-config-login-fields" onsubmit="handleLogin(event)">
+          <div>
+            <label class="az-field-label" for="login-user">Identifiant</label>
+            <input class="az-input" type="text" id="login-user" placeholder="admin" autocomplete="username" oninput="clearLoginErr()" />
+          </div>
+          <div>
+            <label class="az-field-label" for="login-pass">Mot de passe</label>
+            <div class="az-pass-wrap">
+              <input class="az-input" type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" oninput="clearLoginErr()" />
+              <button type="button" class="az-pass-toggle" onclick="togglePass()" aria-label="Afficher le mot de passe">
+                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
             </div>
-            <div class="card">
-              <h3>Fréquence des navigateurs</h3>
-              <div class="chart-container"><canvas id="chart-browser"></canvas></div>
+          </div>
+          <div class="az-config-login-err hidden" id="login-err">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Identifiants incorrects. Réessayez.
+          </div>
+          <button type="submit" class="az-save-btn">
+            <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            Se connecter
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Configuration -->
+    <div class="az-config-inner az-fade-up hidden" id="config-panel">
+      <div class="az-page-title">
+        <h1>Configuration</h1>
+        <p>Paramètres de l'application Analyzer</p>
+      </div>
+
+      <div class="az-config-section">
+        <div class="az-config-section-header">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span>Types de logs pris en charge</span>
+        </div>
+        <div class="az-config-body">
+          <div class="az-config-row">
+            <div class="az-config-row-label">
+              <p>Format de logs actif</p>
+              <small>Détermine le parseur utilisé pour analyser les fichiers</small>
+            </div>
+            <div class="az-config-row-control">
+              <select class="az-select" id="cfg-type" onchange="onCfgTypeChange()">
+                <option value="apache">Apache (Common / Combined Log Format)</option>
+                <option value="syslog">Linux — Syslog (/var/log/syslog)</option>
+              </select>
             </div>
           </div>
 
-          <div class="card">
-            <h3>Requêtes sensibles détectées</h3>
-            <ul class="anomaly-list" id="anomaly-list"></ul>
+          <div class="az-config-divider"></div>
+
+          <div>
+            <div class="az-config-path-head">
+              <p>Chemin du fichier <span class="az-edited hidden" id="cfg-edited">• modifié</span></p>
+              <button type="button" class="az-reset-btn hidden" id="cfg-reset" onclick="resetPath()">
+                <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+                Réinitialiser
+              </button>
+            </div>
+            <div class="az-config-path-row">
+              <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <input class="az-input" type="text" id="cfg-path" value="/var/log/apache2/access.log" spellcheck="false" oninput="onCfgPathInput()" />
+            </div>
+            <p class="az-config-path-hint">Pré-rempli selon le type de logs — modifiable librement</p>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- ══════════════ CONFIGURER L'APPLICATION ══════════════ -->
-    <section id="page-config" class="page">
-      <div class="page-inner narrow">
-        <h1>Configurer l'application</h1>
-
-        <div class="form">
-          <div>
-            <label>Type de logs pris en charge</label>
-            <input type="text" value="Apache — access.log" readonly />
-          </div>
-          <div>
-            <label>Chemin du fichier access.log</label>
-            <input type="text" value="/var/log/apache2/access.log" readonly />
-          </div>
-          <div>
-            <label>Protocole par défaut</label>
-            <select>
-              <option>SSH</option>
-              <option>SCP</option>
-              <option>HTTP</option>
-            </select>
+      <div class="az-config-section">
+        <div class="az-config-section-header">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Connexion SCP / SSH</span>
+        </div>
+        <div class="az-config-body">
+          <div class="az-config-row">
+            <div class="az-config-row-label">
+              <p>Port SSH / SCP par défaut</p>
+              <small>Port utilisé pour les connexions SCP distantes</small>
+            </div>
+            <div class="az-config-row-control" style="display:flex;justify-content:flex-end">
+              <input class="az-port-input" type="number" min="1" max="65535" value="22" />
+            </div>
           </div>
         </div>
       </div>
-    </section>
 
-  </main>
+      <div class="az-save-toast hidden" id="save-toast">
+        <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Configuration enregistrée avec succès.
+      </div>
+      <button class="az-save-btn" onclick="saveConfig()">
+        <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Enregistrer
+      </button>
+    </div>
+  </section>
+
 </div>
 
 <script>
 /* ═══════════════════════════════════════
-   DONNÉES SIMULÉES (access.log Apache)
+   DONNÉES
 ═══════════════════════════════════════ */
-const FF  = "Firefox";
-const CH  = "Chrome";
-const SA  = "Safari";
-const ED  = "Edge";
-const CUR = "curl";
+const LOG_TYPES = {
+  apache: '/var/log/apache2/access.log',
+  syslog: '/var/log/syslog'
+};
 
-const LOGS = [
-  { ip:"192.168.1.10",  ts:"18/Oct/2026:08:01:12", method:"GET",  res:"/index.html",                   code:200, size:5120,  browser:CH  },
-  { ip:"192.168.1.10",  ts:"18/Oct/2026:08:01:13", method:"GET",  res:"/css/style.css",                code:200, size:2048,  browser:CH  },
-  { ip:"192.168.1.22",  ts:"18/Oct/2026:08:02:45", method:"GET",  res:"/produits",                     code:200, size:14320, browser:FF  },
-  { ip:"192.168.1.22",  ts:"18/Oct/2026:08:03:01", method:"POST", res:"/login",                        code:302, size:0,     browser:FF  },
-  { ip:"10.0.0.5",      ts:"18/Oct/2026:08:05:33", method:"GET",  res:"/api/users",                    code:200, size:8870,  browser:CUR },
-  { ip:"192.168.1.35",  ts:"18/Oct/2026:08:07:14", method:"GET",  res:"/contact",                      code:200, size:3100,  browser:SA  },
-  { ip:"203.0.113.77",  ts:"18/Oct/2026:08:09:22", method:"GET",  res:"/admin",                        code:403, size:512,   browser:CUR },
-  { ip:"203.0.113.77",  ts:"18/Oct/2026:08:09:24", method:"GET",  res:"/.env",                         code:404, size:312,   browser:CUR },
-  { ip:"203.0.113.77",  ts:"18/Oct/2026:08:09:27", method:"GET",  res:"/wp-login.php",                 code:404, size:312,   browser:CUR },
-  { ip:"192.168.1.10",  ts:"18/Oct/2026:08:11:50", method:"GET",  res:"/images/logo.png",              code:200, size:18440, browser:CH  },
-  { ip:"198.51.100.14", ts:"18/Oct/2026:08:13:09", method:"GET",  res:"/produits?id=1' OR '1'='1",     code:500, size:1024,  browser:ED  },
-  { ip:"192.168.1.35",  ts:"18/Oct/2026:08:15:42", method:"GET",  res:"/a-propos",                     code:200, size:2780,  browser:SA  },
-  { ip:"198.51.100.14", ts:"18/Oct/2026:08:17:03", method:"GET",  res:"/../../etc/passwd",             code:400, size:400,   browser:ED  },
-  { ip:"192.168.1.22",  ts:"18/Oct/2026:08:19:28", method:"GET",  res:"/produits/42",                  code:200, size:6210,  browser:FF  },
-  { ip:"192.168.1.10",  ts:"18/Oct/2026:08:21:11", method:"GET",  res:"/favicon.ico",                  code:404, size:209,   browser:CH  },
-  { ip:"10.0.0.5",      ts:"18/Oct/2026:08:26:18", method:"GET",  res:"/api/orders",                   code:200, size:11900, browser:CUR },
-];
+const SYSLOG_DATA = [
+  ["2026-10-07 08:01:12","INFO","auth-service","Connexion réussie pour l'utilisateur admin@company.com"],
+  ["2026-10-07 08:02:45","WARN","api-gateway","Temps de réponse élevé détecté : 1 842 ms"],
+  ["2026-10-07 08:03:01","ERROR","db-connector","Échec de connexion à la base de données primaire, tentative de basculement..."],
+  ["2026-10-07 08:03:05","INFO","db-connector","Basculement vers la base de données secondaire réussi"],
+  ["2026-10-07 08:05:33","DEBUG","scheduler","Tâche planifiée 'sync-users' démarrée (ID: job-4821)"],
+  ["2026-10-07 08:07:14","ERROR","mail-service","Impossible d'envoyer l'e-mail : SMTP timeout après 30 s"],
+  ["2026-10-07 08:09:22","INFO","auth-service","Token JWT renouvelé pour l'utilisateur user42"],
+  ["2026-10-07 08:11:50","WARN","cache-manager","Cache hit rate inférieur à 60 % — vérifiez la configuration TTL"],
+  ["2026-10-07 08:13:09","INFO","api-gateway","Déploiement v2.4.1 appliqué avec succès"],
+  ["2026-10-07 08:15:42","DEBUG","scheduler","Tâche 'sync-users' terminée en 2 312 ms — 148 enregistrements traités"],
+  ["2026-10-07 08:17:03","ERROR","payment-service","Transaction #TX-9921 refusée : code d'erreur 4003 (fonds insuffisants)"],
+  ["2026-10-07 08:19:28","INFO","auth-service","Déconnexion de l'utilisateur user99@company.com"],
+  ["2026-10-07 08:21:11","WARN","api-gateway","Rate limit atteint pour l'IP 192.168.1.45 (200 req/min)"],
+  ["2026-10-07 08:23:55","INFO","db-connector","Sauvegarde automatique effectuée — 3.2 GB exportés"],
+  ["2026-10-07 08:26:18","ERROR","cache-manager","Éviction forcée de 2 048 entrées — mémoire critique à 94 %"]
+].map((r, i) => ({ id: i + 1, ts: r[0], level: r[1], src: r[2], msg: r[3] }));
 
-const COLUMNS = [
-  { key:"ip",      label:"Adresse IP",     cls:"mono" },
-  { key:"ts",      label:"Date / heure",   cls:"mono" },
-  { key:"method",  label:"Méthode",        cls:""     },
-  { key:"res",     label:"Ressource",      cls:"res"  },
-  { key:"code",    label:"Code HTTP",      cls:""     },
-  { key:"size",    label:"Taille (octets)",cls:"mono" },
-  { key:"browser", label:"Navigateur",     cls:""     },
-];
+const APACHE_RAW = `192.168.1.10 - - [18/Oct/2026:08:01:12 +0200] "GET /index.html HTTP/1.1" 200 5120 "-" "Mozilla/5.0 Chrome/118.0"
+192.168.1.10 - - [18/Oct/2026:08:01:13 +0200] "GET /css/style.css HTTP/1.1" 200 2048 "-" "Mozilla/5.0 Chrome/118.0"
+192.168.1.22 - - [18/Oct/2026:08:02:45 +0200] "GET /produits HTTP/1.1" 200 14320 "-" "Mozilla/5.0 Firefox/119.0"
+192.168.1.22 - - [18/Oct/2026:08:03:01 +0200] "POST /login HTTP/1.1" 302 0 "-" "Mozilla/5.0 Firefox/119.0"
+10.0.0.5 - - [18/Oct/2026:08:05:33 +0200] "GET /api/users HTTP/1.1" 200 8870 "-" "curl/8.1.2"
+192.168.1.35 - - [18/Oct/2026:08:07:14 +0200] "GET /contact HTTP/1.1" 200 3100 "-" "Mozilla/5.0 Safari/605.1"
+203.0.113.77 - - [18/Oct/2026:08:09:22 +0200] "GET /admin HTTP/1.1" 403 512 "-" "curl/8.1.2"
+203.0.113.77 - - [18/Oct/2026:08:09:24 +0200] "GET /.env HTTP/1.1" 404 312 "-" "curl/8.1.2"
+203.0.113.77 - - [18/Oct/2026:08:09:27 +0200] "GET /wp-login.php HTTP/1.1" 404 312 "-" "curl/8.1.2"
+192.168.1.10 - - [18/Oct/2026:08:11:50 +0200] "GET /images/logo.png HTTP/1.1" 200 18440 "-" "Mozilla/5.0 Chrome/118.0"
+198.51.100.14 - - [18/Oct/2026:08:13:09 +0200] "GET /produits?id=1' OR '1'='1 HTTP/1.1" 500 1024 "-" "Mozilla/5.0 Edg/118.0"
+192.168.1.35 - - [18/Oct/2026:08:15:42 +0200] "GET /a-propos HTTP/1.1" 200 2780 "-" "Mozilla/5.0 Safari/605.1"
+198.51.100.14 - - [18/Oct/2026:08:17:03 +0200] "GET /../../etc/passwd HTTP/1.1" 400 400 "-" "sqlmap/1.7"
+192.168.1.22 - - [18/Oct/2026:08:19:28 +0200] "GET /produits/42 HTTP/1.1" 200 6210 "-" "Mozilla/5.0 Firefox/119.0"
+192.168.1.10 - - [18/Oct/2026:08:21:11 +0200] "GET /favicon.ico HTTP/1.1" 404 209 "-" "Mozilla/5.0 Chrome/118.0"
+10.0.0.5 - - [18/Oct/2026:08:26:18 +0200] "GET /api/orders HTTP/1.1" 200 11900 "-" "curl/8.1.2"`;
 
-const SENSITIVE = [
-  { re:/\.env|passwd|\.\.\//i,        label:"Accès fichier sensible" },
-  { re:/' ?OR ?'|union select|--/i,   label:"Injection SQL suspectée" },
-  { re:/\/admin|wp-login/i,           label:"Page d'administration" },
-];
+/* ═══════════════════════════════════════
+   PARSING APACHE
+═══════════════════════════════════════ */
+function extraireNavigateur(ua) {
+  const t = ua.toLowerCase();
+  if (t.includes('sqlmap') || t.includes('nikto')) return 'Scanner / Attaque';
+  if (t.includes('curl') || t.includes('wget') || t.includes('python')) return 'Script (curl/bot)';
+  if (t.includes('firefox')) return 'Firefox';
+  if (t.includes('edg')) return 'Edge';
+  if (t.includes('chrome')) return 'Chrome';
+  if (t.includes('safari')) return 'Safari';
+  return 'Autre';
+}
+
+function verifierAlerte(ressource, code, ua) {
+  const url = ressource.toLowerCase(), agent = ua.toLowerCase();
+  if (url.includes('../') || url.includes('/etc/passwd')) return 'Traversée de répertoires';
+  if (url.includes("'") || url.includes('or 1=1') || url.includes('select')) return 'Injection SQL suspectée';
+  if (url.includes('/admin') || url.includes('wp-login') || url.includes('.env') || url.includes('config')) return 'Accès ressource sensible';
+  if (agent.includes('sqlmap') || agent.includes('nikto')) return 'Scan de vulnérabilités';
+  if (code === 401 || code === 403 || code === 500) return 'Erreur HTTP sensible (' + code + ')';
+  return null;
+}
+
+function parseApacheLogs(text) {
+  const regex = /^(\S+) \S+ \S+ \[([^\]]+)\] "(\S+) ([^"]+) \S+" (\d{3}) (\S+)(?: "[^"]*" "([^"]*)")?/;
+  const out = [];
+  text.split('\n').forEach((line, idx) => {
+    const m = line.trim().match(regex);
+    if (!m) return;
+    const code = parseInt(m[5], 10);
+    const ua = m[7] || 'Inconnu';
+    const ressource = m[4];
+    const alerte = verifierAlerte(ressource, code, ua);
+    const nav = extraireNavigateur(ua);
+    out.push({
+      id: idx + 1, ts: m[2], src: m[1], methode: m[3], ressource, code,
+      navigateur: nav, alerte,
+      level: alerte ? 'ERROR' : code >= 400 ? 'WARN' : 'INFO',
+      msg: m[3] + ' ' + ressource + ' (HTTP ' + code + ') — ' + nav,
+      isApache: true
+    });
+  });
+  return out;
+}
 
 /* ═══════════════════════════════════════
    ÉTAT
 ═══════════════════════════════════════ */
-let dataLoaded  = false;
-let visibleCols = COLUMNS.map(c => c.key);
-let charts      = [];
+let logs = [];
+let scpDone = false;
+let loadingTarget = 'visualize';
+let loadingTimer = null;
+let charts = [];
+
+const LEVEL_CFG = {
+  INFO:  { color: '#60a5fa', bg: 'rgba(59,130,246,.15)' },
+  WARN:  { color: '#fbbf24', bg: 'rgba(251,191,36,.15)' },
+  ERROR: { color: '#f87171', bg: 'rgba(248,113,113,.15)' },
+  DEBUG: { color: '#a78bfa', bg: 'rgba(167,139,250,.15)' }
+};
+const LEVEL_ICON = {
+  INFO:  '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+  WARN:  '<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  ERROR: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+  DEBUG: '<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+};
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+const $ = id => document.getElementById(id);
+
+function pill(level) {
+  const c = LEVEL_CFG[level];
+  return `<span class="az-level-pill" style="background:${c.bg};color:${c.color}">${LEVEL_ICON[level]} ${level}</span>`;
+}
 
 /* ═══════════════════════════════════════
    NAVIGATION
 ═══════════════════════════════════════ */
-function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  document.querySelectorAll('.menu-link').forEach(b => b.classList.remove('active'));
-  document.getElementById('menu-' + id).classList.add('active');
+function showPage(name) {
+  // déconnexion auto de la config quand on la quitte
+  if (name !== 'config') resetConfigAuth();
 
-  if (id === 'visualize') renderTable();
-  if (id === 'analyze')   renderAnalysis();
+  document.querySelectorAll('.az-page').forEach(p => p.classList.remove('az-active'));
+  $('az-page-' + name).classList.add('az-active');
+
+  $('nav-home').className      = 'az-nav-link' + (name === 'home' ? ' az-active' : '');
+  $('nav-visualize').className = 'az-nav-link' + (name === 'visualize' ? ' az-active' : '');
+  $('nav-analyze').className   = 'az-nav-link' + (name === 'analyze' ? ' az-active-purple' : '');
+  $('nav-config').className    = 'az-nav-link' + (name === 'config' ? ' az-active' : '');
+
+  if (name === 'visualize') renderVisualize();
+  if (name === 'analyze')   renderAnalyze();
+  window.scrollTo(0, 0);
+}
+function goHome() { showPage('home'); }
+
+function navigateTo(target) {
+  if (!scpDone) return;
+  loadingTarget = target;
+  showPage('loading');
+  runLoading(target);
+}
+
+function unlockNav() {
+  ['nav-visualize', 'nav-analyze'].forEach(id => $(id).disabled = false);
+  $('home-btn-visualize').disabled = false;
+  $('home-btn-visualize').classList.add('blue');
+  $('home-btn-analyze').disabled = false;
+  $('home-btn-analyze').classList.add('purple');
+  $('home-hint').classList.add('hidden');
 }
 
 /* ═══════════════════════════════════════
-   RÉCUPÉRER UN FICHIER
+   ACCUEIL — SCP
 ═══════════════════════════════════════ */
-function onProtocolChange() {
-  const p = document.getElementById('protocol').value;
-  document.getElementById('credentials').classList.toggle('hidden', p === 'HTTP');
+function updateResolvedPath() {
+  $('scp-path').textContent = LOG_TYPES[$('scp-type').value];
 }
 
-function fetchFile(e) {
+function fetchScp(e) {
   e.preventDefault();
-  const addr = document.getElementById('server-address').value.trim();
-  const msg  = document.getElementById('fetch-msg');
-  const btn  = document.getElementById('btn-fetch');
-  const prot = document.getElementById('protocol').value;
+  const host = $('scp-host').value.trim();
+  const user = $('scp-user').value.trim();
+  const pass = $('scp-pass').value;
+  const msg = $('scp-msg');
+  msg.className = 'az-scp-msg';
 
-  msg.className = 'msg';
-  if (!addr) { msg.textContent = "Veuillez saisir l'adresse du serveur."; msg.classList.add('err'); return; }
-  if (prot !== 'HTTP') {
-    const u = document.getElementById('ssh-user').value.trim();
-    const p = document.getElementById('ssh-pass').value;
-    if (!u || !p) { msg.textContent = "Veuillez renseigner l'utilisateur et le mot de passe."; msg.classList.add('err'); return; }
+  if (!host || !user || !pass) {
+    msg.textContent = 'Veuillez renseigner tous les champs SCP.';
+    msg.classList.add('err');
+    return;
   }
-
-  // Simulation de la récupération (aucun backend pour l'instant)
-  btn.disabled = true;
+  $('scp-btn').disabled = true;
+  $('scp-btn-label').textContent = 'Récupération en cours…';
   msg.textContent = '';
+
   setTimeout(() => {
-    dataLoaded = true;
-    btn.disabled = false;
-    msg.textContent = 'Récupération effectuée avec succès.';
+    logs = $('scp-type').value === 'apache' ? parseApacheLogs(APACHE_RAW) : SYSLOG_DATA;
+    scpDone = true;
+    $('scp-btn').disabled = false;
+    $('scp-btn-label').textContent = 'Récupérer le fichier';
+    msg.textContent = 'Fichier récupéré depuis ' + host + ' avec succès.';
     msg.classList.add('ok');
-  }, 900);
+    unlockNav();
+  }, 1100);
+}
+
+/* ═══════════════════════════════════════
+   CHARGEMENT
+═══════════════════════════════════════ */
+function runLoading(target) {
+  const STEPS = target === 'visualize'
+    ? ['Lecture du fichier…', 'Parsing des entrées…', 'Formatage des données…', 'Prêt à visualiser !']
+    : ['Lecture du fichier…', 'Extraction des patterns…', 'Calcul des statistiques…', 'Analyse terminée !'];
+  const DURATIONS = [600, 700, 700, 500];
+  const TOTAL = DURATIONS.reduce((a, b) => a + b, 0);
+  const CIRC = 2 * Math.PI * 38;
+
+  $('loading-title').textContent = target === 'visualize' ? 'Préparation de la visualisation' : 'Analyse en cours';
+  $('spinner-fg').style.strokeDasharray = CIRC;
+
+  if (loadingTimer) clearInterval(loadingTimer);
+  let elapsed = 0;
+
+  function paint(pct, step) {
+    $('loading-pct').textContent = pct + '%';
+    $('loading-bar').style.width = pct + '%';
+    $('spinner-fg').style.strokeDashoffset = CIRC * (1 - pct / 100);
+    $('loading-step').textContent = STEPS[step];
+    $('loading-dots').innerHTML = STEPS.map((_, i) =>
+      (i > 0 ? `<div class="az-step-line ${i - 1 < step ? 'az-done' : ''}"></div>` : '') +
+      `<div class="az-step-dot ${i < step ? 'az-done' : i === step ? 'az-active' : ''}"></div>`
+    ).join('');
+  }
+  paint(0, 0);
+
+  loadingTimer = setInterval(() => {
+    elapsed += 30;
+    const pct = Math.round(Math.min(elapsed / TOTAL, 1) * 100);
+    let cumul = 0, step = 0;
+    for (let i = 0; i < DURATIONS.length; i++) {
+      cumul += DURATIONS[i];
+      step = i;
+      if (elapsed < cumul) break;
+    }
+    paint(pct, step);
+    if (elapsed >= TOTAL) {
+      clearInterval(loadingTimer);
+      loadingTimer = null;
+      setTimeout(() => {
+        if ($('az-page-loading').classList.contains('az-active')) showPage(loadingTarget);
+      }, 300);
+    }
+  }, 30);
 }
 
 /* ═══════════════════════════════════════
    VISUALISER
 ═══════════════════════════════════════ */
-function esc(s) {
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
+function renderVisualize() {
+  const isApache = logs.some(l => l.isApache);
 
-function toggleFilter() {
-  const panel = document.getElementById('filter-panel');
-  panel.classList.toggle('hidden');
-  if (!panel.classList.contains('hidden')) {
-    panel.innerHTML = COLUMNS.map(c =>
-      `<label><input type="checkbox" ${visibleCols.includes(c.key) ? 'checked' : ''} onchange="toggleCol('${c.key}')"> ${c.label}</label>`
-    ).join('');
-  }
-}
+  // badges
+  $('visu-badges').innerHTML = ['INFO', 'WARN', 'ERROR', 'DEBUG'].map(lvl => {
+    const c = LEVEL_CFG[lvl];
+    const cnt = logs.filter(l => l.level === lvl).length;
+    const active = $('visu-level').value === lvl;
+    return `<button class="az-badge-btn" data-lvl="${lvl}"
+      style="border-color:${active ? c.color : '#475569'};background:${active ? c.bg : 'transparent'};color:${c.color}">
+      ${LEVEL_ICON[lvl]} ${lvl} <span style="opacity:.7">(${cnt})</span></button>`;
+  }).join('');
+  document.querySelectorAll('.az-badge-btn').forEach(b => b.onclick = () => {
+    const sel = $('visu-level');
+    sel.value = sel.value === b.dataset.lvl ? 'ALL' : b.dataset.lvl;
+    renderVisualize();
+  });
 
-function toggleCol(key) {
-  visibleCols = visibleCols.includes(key)
-    ? visibleCols.filter(k => k !== key)
-    : COLUMNS.filter(c => c.key === key || visibleCols.includes(c.key)).map(c => c.key);
+  // en-têtes
+  $('visu-thead').innerHTML = '<tr><th>Horodatage</th><th>Niveau</th><th>' + (isApache ? 'Adresse IP' : 'Source') + '</th>' +
+    (isApache ? '<th>Ressource demandée</th><th>Code HTTP</th><th>Navigateur</th>' : '<th>Message</th>') + '</tr>';
+
   renderTable();
 }
 
-function codeClass(c) { return c >= 500 ? 'code-err' : c >= 400 ? 'code-warn' : 'code-ok'; }
-
 function renderTable() {
-  const cols  = COLUMNS.filter(c => visibleCols.includes(c.key));
-  const thead = document.getElementById('log-thead');
-  const tbody = document.getElementById('log-tbody');
+  const isApache = logs.some(l => l.isApache);
+  const q = $('visu-search').value.toLowerCase();
+  const lvl = $('visu-level').value;
 
-  thead.innerHTML = '<tr>' + cols.map(c => `<th>${c.label}</th>`).join('') + '</tr>';
+  const rows = logs.filter(l =>
+    (lvl === 'ALL' || l.level === lvl) &&
+    (l.msg.toLowerCase().includes(q) || l.src.toLowerCase().includes(q))
+  );
+  $('visu-count').textContent = rows.length + ' entrée(s) affichée(s)';
 
-  if (!dataLoaded) {
-    tbody.innerHTML = `<tr><td class="empty" colspan="${cols.length || 1}">Aucune donnée. Récupérez d'abord un fichier.</td></tr>`;
-    return;
-  }
+  // mise à jour de l'état actif des badges
+  document.querySelectorAll('.az-badge-btn').forEach(b => {
+    const c = LEVEL_CFG[b.dataset.lvl], on = lvl === b.dataset.lvl;
+    b.style.borderColor = on ? c.color : '#475569';
+    b.style.background = on ? c.bg : 'transparent';
+  });
 
-  tbody.innerHTML = LOGS.map(l =>
-    '<tr>' + cols.map(c => {
-      const cls = [c.cls, c.key === 'code' ? codeClass(l.code) : ''].join(' ').trim();
-      return `<td class="${cls}" ${c.key === 'res' ? `title="${esc(l.res)}"` : ''}>${esc(l[c.key])}</td>`;
-    }).join('') + '</tr>'
-  ).join('');
+  $('visu-tbody').innerHTML = rows.length === 0
+    ? `<tr><td class="az-no-results" colspan="${isApache ? 6 : 4}">Aucune entrée ne correspond à votre recherche</td></tr>`
+    : rows.map(l => `<tr class="${l.alerte ? 'az-row-sensible' : ''}">
+        <td class="az-ts">${esc(l.ts)}</td>
+        <td>${pill(l.level)}</td>
+        <td class="az-src">${esc(l.src)}</td>
+        ${isApache
+          ? `<td class="az-msg az-mono">${esc(l.methode)} ${esc(l.ressource)}</td>
+             <td class="az-code"><strong>${l.code}</strong></td>
+             <td class="az-msg">${esc(l.navigateur)}</td>`
+          : `<td class="az-msg">${esc(l.msg)}</td>`}
+      </tr>`).join('');
 }
 
 /* ═══════════════════════════════════════
    ANALYSER
 ═══════════════════════════════════════ */
-function countBy(key) {
+function freq(key) {
   const m = {};
-  LOGS.forEach(l => m[l[key]] = (m[l[key]] || 0) + 1);
+  logs.forEach(l => { const v = String(l[key] ?? 'Inconnu'); m[v] = (m[v] || 0) + 1; });
   return Object.entries(m).sort((a, b) => b[1] - a[1]);
 }
 
-function renderAnalysis() {
-  document.getElementById('analyze-empty').classList.toggle('hidden', dataLoaded);
-  document.getElementById('analyze-content').classList.toggle('hidden', !dataLoaded);
-  if (!dataLoaded) return;
+function renderAnalyze() {
+  const isApache = logs.some(l => l.isApache);
+  const total = logs.length;
+  const errCount = logs.filter(l => l.level === 'ERROR').length;
+  const rate = total ? Math.round(((total - errCount) / total) * 100) : 0;
+  const sens = logs.filter(l => l.alerte);
 
+  $('analyze-date').textContent = 'Rapport généré le ' + new Date().toLocaleDateString('fr-FR') + ' à ' +
+    new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  $('kpi-total').textContent = total;
+  $('kpi-err').textContent = errCount;
+  $('kpi-rate').textContent = rate + '%';
+  $('kpi-alert').textContent = sens.length;
+
+  // Tableau des requêtes sensibles
+  $('sens-thead').innerHTML = '<tr><th>Horodatage</th><th>' + (isApache ? 'Adresse IP' : 'Source') + '</th>' +
+    (isApache ? '<th>Requête / Ressource</th><th>Code HTTP</th>' : '') + '<th>Type d\'alerte</th></tr>';
+  $('sens-tbody').innerHTML = sens.length === 0
+    ? `<tr><td class="az-no-results" colspan="${isApache ? 5 : 3}">Aucune requête sensible détectée</td></tr>`
+    : sens.map(l => `<tr class="az-row-sensible">
+        <td class="az-ts">${esc(l.ts)}</td>
+        <td class="az-src">${esc(l.src)}</td>
+        ${isApache ? `<td class="az-msg az-mono">${esc(l.methode)} ${esc(l.ressource)}</td>
+          <td class="az-code"><strong style="color:#f87171">${l.code}</strong></td>` : ''}
+        <td class="az-msg" style="color:#f87171">⚠️ ${esc(l.alerte)}</td>
+      </tr>`).join('');
+
+  // Tables de fréquence (Apache uniquement)
+  const grid = $('stats-grid');
+  grid.classList.toggle('hidden', !isApache);
+  if (isApache) {
+    const stats = [
+      { title: '📄 Ressources / Fréquence', data: freq('ressource'), label: 'Ressource', cls: 'az-src' },
+      { title: '🌐 Adresses IP / Fréquence', data: freq('src'), label: 'Adresse IP', cls: 'az-src' },
+      { title: '🖥 Navigateurs / Fréquence', data: freq('navigateur'), label: 'Navigateur', cls: 'az-msg' }
+    ];
+    grid.innerHTML = stats.map(s => `<div class="az-stat-card"><h3>${s.title}</h3>
+      <div class="az-table-wrap"><table>
+        <thead><tr><th>${s.label}</th><th style="width:80px">Fréq.</th></tr></thead>
+        <tbody>${s.data.slice(0, 8).map(([k, v]) => `<tr><td class="${s.cls}">${esc(k)}</td><td><strong>${v}</strong></td></tr>`).join('')}</tbody>
+      </table></div></div>`).join('');
+  }
+
+  drawCharts();
+}
+
+function drawCharts() {
+  if (typeof Chart === 'undefined') return;
   charts.forEach(c => c.destroy());
   charts = [];
 
-  const tick = '#8b98b5', grid = 'rgba(36,49,79,0.8)';
-  const tooltip = { backgroundColor:'#111a2e', borderColor:'#24314f', borderWidth:1, titleColor:'#e6ebf5', bodyColor:'#8b98b5' };
+  const grid = 'rgba(51,65,85,0.7)', tick = '#94a3b8';
+  const tip = { backgroundColor: '#1e293b', borderColor: '#334155', borderWidth: 1, titleColor: '#f1f5f9', bodyColor: '#94a3b8', padding: 10 };
 
-  // IP
-  const ips = countBy('ip');
-  charts.push(new Chart(document.getElementById('chart-ip'), {
+  // Niveaux
+  const lvl = { INFO: 0, WARN: 0, ERROR: 0, DEBUG: 0 };
+  logs.forEach(l => lvl[l.level]++);
+  charts.push(new Chart($('chart-bar'), {
     type: 'bar',
-    data: { labels: ips.map(i => i[0]), datasets: [{ data: ips.map(i => i[1]), backgroundColor: '#3b6fd4', borderRadius: 4 }] },
-    options: {
-      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip },
-      scales: {
-        x: { grid: { color: grid }, ticks: { color: tick, precision: 0 }, border: { display: false } },
-        y: { grid: { display: false }, ticks: { color: tick }, border: { display: false } }
-      }
-    }
+    data: { labels: Object.keys(lvl), datasets: [{ data: Object.values(lvl), backgroundColor: ['#3b82f6', '#f59e0b', '#ef4444', '#a78bfa'], borderRadius: 6, borderSkipped: false }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: tip },
+      scales: { x: { grid: { display: false }, ticks: { color: tick }, border: { display: false } }, y: { grid: { color: grid }, ticks: { color: tick, precision: 0 }, border: { display: false } } } }
   }));
 
-  // Navigateurs
-  const br = countBy('browser');
-  charts.push(new Chart(document.getElementById('chart-browser'), {
+  // Sources
+  const src = freq('src').slice(0, 6);
+  charts.push(new Chart($('chart-dough'), {
     type: 'doughnut',
-    data: {
-      labels: br.map(b => b[0]),
-      datasets: [{
-        data: br.map(b => b[1]),
-        backgroundColor: ['#3b6fd4','#5b8def','#2a4d9b','#7ea5f5','#1d3573'],
-        borderColor: '#111a2e', borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false, cutout: '60%',
-      plugins: { legend: { position: 'right', labels: { color: tick, boxWidth: 12 } }, tooltip }
-    }
+    data: { labels: src.map(e => e[0]), datasets: [{ data: src.map(e => e[1]), backgroundColor: ['#3b82f6', '#f59e0b', '#ef4444', '#a78bfa', '#34d399', '#fb923c'], borderColor: '#1e293b', borderWidth: 2, hoverOffset: 6 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'right', labels: { color: tick, font: { size: 11 }, boxWidth: 12, padding: 10 } }, tooltip: tip } }
   }));
 
-  // Requêtes sensibles
-  const found = [];
-  LOGS.forEach(l => {
-    const rule = SENSITIVE.find(s => s.re.test(l.res));
-    if (rule) found.push({ label: rule.label, ip: l.ip, res: l.res });
+  // Évolution temporelle (tranches de 5 min)
+  const buckets = {};
+  logs.forEach(l => {
+    const m = l.ts.match(/(\d{2}):(\d{2}):\d{2}/);
+    if (!m) return;
+    const key = m[1] + ':' + String(Math.floor(+m[2] / 5) * 5).padStart(2, '0');
+    buckets[key] = buckets[key] || { ERROR: 0, WARN: 0, INFO: 0, DEBUG: 0 };
+    buckets[key][l.level]++;
   });
-  document.getElementById('anomaly-list').innerHTML = found.length
-    ? found.map(f => `<li><span class="tag">${esc(f.label)}</span><span class="ip">${esc(f.ip)}</span><span class="url">${esc(f.res)}</span></li>`).join('')
-    : '<li>Aucune requête sensible détectée.</li>';
+  const labels = Object.keys(buckets).sort();
+  const serie = (lvlName, color, bg, name) => ({ label: name, data: labels.map(k => buckets[k][lvlName]), borderColor: color, backgroundColor: bg, tension: .4, pointRadius: 5, fill: true });
+  charts.push(new Chart($('chart-line'), {
+    type: 'line',
+    data: { labels, datasets: [
+      serie('ERROR', '#ef4444', 'rgba(239,68,68,.1)', 'Erreurs'),
+      serie('WARN', '#f59e0b', 'rgba(245,158,11,.1)', 'Avertissements'),
+      serie('INFO', '#3b82f6', 'rgba(59,130,246,.1)', 'Infos')
+    ] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: tick, font: { size: 12 }, boxWidth: 14, padding: 16 } }, tooltip: tip },
+      scales: { x: { grid: { color: grid }, ticks: { color: tick }, border: { display: false } }, y: { grid: { color: grid }, ticks: { color: tick, precision: 0 }, border: { display: false }, beginAtZero: true } } }
+  }));
 }
 
-/* Initialisation */
-onProtocolChange();
+/* ═══════════════════════════════════════
+   CONFIGURATION (login admin / admin)
+═══════════════════════════════════════ */
+let pathEdited = false;
+
+function resetConfigAuth() {
+  $('config-login').classList.remove('hidden');
+  $('config-panel').classList.add('hidden');
+  $('login-user').value = '';
+  $('login-pass').value = '';
+  $('login-pass').type = 'password';
+  $('login-err').classList.add('hidden');
+}
+
+function clearLoginErr() { $('login-err').classList.add('hidden'); }
+
+function togglePass() {
+  const i = $('login-pass');
+  i.type = i.type === 'password' ? 'text' : 'password';
+}
+
+function handleLogin(e) {
+  e.preventDefault();
+  if ($('login-user').value === 'admin' && $('login-pass').value === 'admin') {
+    $('config-login').classList.add('hidden');
+    $('config-panel').classList.remove('hidden');
+  } else {
+    $('login-err').classList.remove('hidden');
+  }
+}
+
+function onCfgTypeChange() {
+  if (!pathEdited) $('cfg-path').value = LOG_TYPES[$('cfg-type').value];
+}
+
+function onCfgPathInput() {
+  pathEdited = true;
+  $('cfg-edited').classList.remove('hidden');
+  $('cfg-reset').classList.remove('hidden');
+}
+
+function resetPath() {
+  $('cfg-path').value = LOG_TYPES[$('cfg-type').value];
+  pathEdited = false;
+  $('cfg-edited').classList.add('hidden');
+  $('cfg-reset').classList.add('hidden');
+}
+
+function saveConfig() {
+  const t = $('save-toast');
+  t.classList.remove('hidden');
+  setTimeout(() => t.classList.add('hidden'), 3000);
+}
 </script>
 </body>
 </html>
